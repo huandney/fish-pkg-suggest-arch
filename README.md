@@ -10,19 +10,33 @@ A smart `command-not-found` handler for Fish shell on Arch Linux that suggests a
 
 ## Installation
 
-Using [Fisher](https://github.com/jorgebucaran/fisher) (recommended):
+Using [Fisher](https://github.com/jorgebucaran/fisher):
 
 ```fish
-fisher install SEU_USUARIO/fish-pkg-suggest-arch
+fisher install huandney/fish-pkg-suggest-arch
 ```
-*(Substitua `SEU_USUARIO` pelo seu usuário do GitHub assim que este repositório estiver público)*
+
+Or via AUR (recommended on Arch — pulls dependencies automatically):
+
+```bash
+# clone the repo and run makepkg, or use your AUR helper
+makepkg -si
+```
 
 ### Setup `pkgfile`
-If you haven't already initialized `pkgfile` on your system, run:
-```bash
-sudo pacman -S pkgfile expac
-sudo pkgfile -u
-```
+The plugin needs the `pkgfile` cache initialized to suggest packages. Pick **one**:
+
+- **Manual** — initialize once, update when you want:
+  ```bash
+  sudo pkgfile -u
+  ```
+- **Automatic (recommended)** — daily background updates via the timer shipped by `pkgfile`:
+  ```bash
+  sudo systemctl enable --now pkgfile-update.timer
+  ```
+- **Pacman hook (advanced)** — refresh after every install/upgrade. Adds 5-30s of synchronous latency to each `pacman` transaction; only worth it if you need fresher data than daily. Create `/etc/pacman.d/hooks/pkgfile-update.hook` yourself if you want this.
+
+If the cache isn't initialized, the plugin will tell you on the first failed command — no silent failures.
 
 ## Features
 - Interactive prompt `[S/n]` to install missing packages directly from official repositories.

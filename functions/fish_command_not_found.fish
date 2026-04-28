@@ -5,7 +5,18 @@ function fish_command_not_found
         return
     end
 
-    set -l matches (pkgfile -b $argv[1])
+    # Cache do pkgfile inicializado?
+    set -l cache_files /var/cache/pkgfile/*.files
+    if not set -q cache_files[1]
+        echo "Comando não encontrado: $argv[1]"
+        echo ""
+        echo "  "(set_color yellow)"⚠"(set_color normal)" Cache do pkgfile não inicializado."
+        echo "    Inicialize com: "(set_color --bold)"sudo pkgfile -u"(set_color normal)
+        echo "    Manter atualizado: "(set_color --bold)"sudo systemctl enable --now pkgfile-update.timer"(set_color normal)
+        return
+    end
+
+    set -l matches (pkgfile -b $argv[1] 2>/dev/null)
     if test (count $matches) -eq 0
         echo "Comando não encontrado: $argv[1]"
         return
@@ -15,13 +26,14 @@ function fish_command_not_found
     set -l repo (string split "/" $full_pkg)[1]
     set -l pkg (string split "/" $full_pkg)[2]
 
-    # Metadados
+    # Metadados (uma chamada de expac, parse nativo)
     set -l info (expac -S --timefmt='%d/%m/%Y' '%u\t%m\t%v\t%b\t%p' $pkg 2>/dev/null)
-    set -l pkg_url (echo $info | cut -f1)
-    set -l pkg_size_bytes (echo $info | cut -f2)
-    set -l pkg_version (echo $info | cut -f3)
-    set -l pkg_builddate (echo $info | cut -f4)
-    set -l pkg_packager (echo $info | cut -f5)
+    set -l fields (string split \t -- $info)
+    set -l pkg_url $fields[1]
+    set -l pkg_size_bytes $fields[2]
+    set -l pkg_version $fields[3]
+    set -l pkg_builddate $fields[4]
+    set -l pkg_packager $fields[5]
 
     # Hyperlink do repositório para repos oficiais do Arch
     set -l ESC (printf '\033')
@@ -95,7 +107,7 @@ function fish_command_not_found
 
     echo ""
 
-    if string match -qri '^(s|sim|y|yes|)$' -- $confirm
+    if string match -qri '^(s|y)?$' -- $confirm
         if sudo pacman -S $pkg
             echo ""
             echo "  "(set_color --bold green)"✓"(set_color normal)" Instalação concluída!"

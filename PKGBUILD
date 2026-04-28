@@ -1,4 +1,4 @@
-# Maintainer: Seu Nome <seu.email@exemplo.com>
+# Maintainer: huandney <huandney@gmail.com>
 
 _pkgname=fish-pkg-suggest-arch
 pkgname=${_pkgname}-git
