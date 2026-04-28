@@ -48,7 +48,7 @@ function __fcnf_print --argument-names layout cmd repo pkg
     switch $layout
         case classic
             set -l w 15
-            echo "O pacote para "(set_color --bold red)"$cmd"(set_color normal)" não está instalado."
+            echo (set_color --bold blue)":: "(set_color normal)"O pacote para "(set_color --bold red)"$cmd"(set_color normal)" não está instalado."
             echo ""
             echo "  "(set_color --bold)(string pad -rw $w "Repositório")(set_color normal)(set_color blue)"$repo_display"(set_color normal)
             if test (count $alts_formatted) -gt 0
@@ -72,7 +72,7 @@ function __fcnf_print --argument-names layout cmd repo pkg
             echo ""
 
         case minimal
-            echo (set_color --bold blue)"::"(set_color normal)" O comando "(set_color --bold red)"$cmd"(set_color normal)" não foi encontrado."
+            echo (set_color --bold blue)":: "(set_color normal)"O comando "(set_color --bold red)"$cmd"(set_color normal)" não foi encontrado."
 
             set -l detail ""
             test -n "$pkg_version"; and set detail "v$pkg_version"
@@ -84,14 +84,10 @@ function __fcnf_print --argument-names layout cmd repo pkg
                 end
             end
 
-            set -l line (set_color --bold blue)"::"(set_color normal)" Pertence a "(set_color blue)"$repo_display"(set_color normal)
+            set -l line (set_color --bold blue)":: "(set_color normal)"Pertence a "(set_color blue)"$repo_display"(set_color normal)
             test -n "$detail"; and set line "$line ($detail)"
             set line "$line."
             echo $line
-
-            if test (count $alts_formatted) -gt 0
-                echo (set_color --bold blue)"::"(set_color normal)" Também em: "(string join ", " $alts_formatted)
-            end
 
         case '*'
             set -l w 8
@@ -109,12 +105,12 @@ function __fcnf_print --argument-names layout cmd repo pkg
                 end
             end
 
-            echo "  "(set_color --bold red)"✗"(set_color normal)" "(set_color --bold)"$cmd"(set_color normal)" não está instalado."
-            echo "  "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Pacote:")(set_color normal)"$pkg_line"
+            echo (set_color --bold blue)":: "(set_color normal)"Comando não está instalado."
+            echo "   "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Pacote:")(set_color normal)"$pkg_line"
             if test (count $alts_formatted) -gt 0
-                echo "    "(set_color --dim)"também em: "(string join ", " $alts_formatted)(set_color normal)
+                echo "     "(set_color --dim)"também em: "(string join ", " $alts_formatted)(set_color normal)
             end
-            test -n "$build_line"; and echo "  "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Build:")(set_color normal)"$build_line"
-            test -n "$pkg_url"; and echo "  "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Site:")(set_color normal)(set_color cyan)"$pkg_url"(set_color normal)
+            test -n "$build_line"; and echo "   "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Build:")(set_color normal)"$build_line"
+            test -n "$pkg_url"; and echo "   "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Site:")(set_color normal)(set_color cyan)"$pkg_url"(set_color normal)
     end
 end
