@@ -5,9 +5,8 @@ function fish_command_not_found
         return
     end
 
-    # Cache do pkgfile inicializado?
-    set -l cache_files /var/cache/pkgfile/*.files
-    if not set -q cache_files[1]
+    # Cache do pkgfile inicializado? .db_version é o marcador que o próprio pkgfile usa.
+    if not test -f /var/cache/pkgfile/.db_version
         echo "Comando não encontrado: $argv[1]"
         echo ""
         echo "  "(set_color yellow)"⚠"(set_color normal)" Cache do pkgfile não inicializado."
