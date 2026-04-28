@@ -45,20 +45,17 @@ function __fcnf_print --argument-names layout cmd repo pkg
         end
     end
 
-    set -l prompt_compact (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)"Deseja instalar $pkg agora? [S/n] "(set_color normal)
-    set -l prompt_minimal (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)"Deseja instalar? [S/n]: "(set_color normal)
-
     switch $layout
         case classic
             set -l w 15
             echo "O pacote para "(set_color --bold red)"$cmd"(set_color normal)" não está instalado."
             echo ""
-            echo "  "(string pad -rw $w "Repositório")(set_color blue)"$repo_display"(set_color normal)
+            echo "  "(set_color --bold)(string pad -rw $w "Repositório")(set_color normal)(set_color blue)"$repo_display"(set_color normal)
             if test (count $alts_formatted) -gt 0
                 echo "  "(string pad -rw $w "")(set_color --dim)"(também em: "(string join ", " $alts_formatted)")"(set_color normal)
             end
-            test -n "$pkg_version"; and echo "  "(string pad -rw $w "Versão")(set_color magenta)"$pkg_version"(set_color normal)
-            test -n "$pkg_description"; and echo "  "(string pad -rw $w "Descrição")"$pkg_description"
+            test -n "$pkg_version"; and echo "  "(set_color --bold)(string pad -rw $w "Versão")(set_color normal)(set_color magenta)"$pkg_version"(set_color normal)
+            test -n "$pkg_description"; and echo "  "(set_color --bold)(string pad -rw $w "Descrição")(set_color normal)"$pkg_description"
 
             set -l size_line ""
             if test -n "$pkg_size"
@@ -67,16 +64,15 @@ function __fcnf_print --argument-names layout cmd repo pkg
             else if test -n "$pkg_dlsize"
                 set size_line "$pkg_dlsize download"
             end
-            test -n "$size_line"; and echo "  "(string pad -rw $w "Tamanho")(set_color yellow)"$size_line"(set_color normal)
+            test -n "$size_line"; and echo "  "(set_color --bold)(string pad -rw $w "Tamanho")(set_color normal)(set_color yellow)"$size_line"(set_color normal)
 
-            test -n "$pkg_builddate"; and echo "  "(string pad -rw $w "Compilado em")"$pkg_builddate"
-            test -n "$pkg_packager"; and echo "  "(string pad -rw $w "Empacotador")"$pkg_packager"
-            test -n "$pkg_url"; and echo "  "(string pad -rw $w "Site Oficial")(set_color cyan)"$pkg_url"(set_color normal)
+            test -n "$pkg_builddate"; and echo "  "(set_color --bold)(string pad -rw $w "Compilação")(set_color normal)"$pkg_builddate"
+            test -n "$pkg_packager"; and echo "  "(set_color --bold)(string pad -rw $w "Empacotador")(set_color normal)"$pkg_packager"
+            test -n "$pkg_url"; and echo "  "(set_color --bold)(string pad -rw $w "Site Oficial")(set_color normal)(set_color cyan)"$pkg_url"(set_color normal)
             echo ""
-            printf '%s' $prompt_compact
 
         case minimal
-            echo (set_color --bold blue)"::"(set_color normal)" O comando '"(set_color --bold)"$cmd"(set_color normal)"' não foi encontrado."
+            echo (set_color --bold blue)"::"(set_color normal)" O comando "(set_color --bold red)"$cmd"(set_color normal)" não foi encontrado."
 
             set -l detail ""
             test -n "$pkg_version"; and set detail "v$pkg_version"
@@ -88,7 +84,7 @@ function __fcnf_print --argument-names layout cmd repo pkg
                 end
             end
 
-            set -l line (set_color --bold blue)"::"(set_color normal)" Pertence a '"(set_color --bold)"$repo/$pkg"(set_color normal)"'"
+            set -l line (set_color --bold blue)"::"(set_color normal)" Pertence a "(set_color blue)"$repo_display"(set_color normal)
             test -n "$detail"; and set line "$line ($detail)"
             set line "$line."
             echo $line
@@ -97,11 +93,9 @@ function __fcnf_print --argument-names layout cmd repo pkg
                 echo (set_color --bold blue)"::"(set_color normal)" Também em: "(string join ", " $alts_formatted)
             end
 
-            printf '%s' $prompt_minimal
-
         case '*'
             set -l w 8
-            set -l pkg_line "$repo_display"
+            set -l pkg_line (set_color blue)"$repo_display"(set_color normal)
             test -n "$pkg_version"; and set pkg_line "$pkg_line "(set_color --dim)"(v$pkg_version)"(set_color normal)
             test -n "$pkg_size"; and set pkg_line "$pkg_line "(set_color yellow)"[$pkg_size]"(set_color normal)
 
@@ -122,7 +116,5 @@ function __fcnf_print --argument-names layout cmd repo pkg
             end
             test -n "$build_line"; and echo "  "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Build:")(set_color normal)"$build_line"
             test -n "$pkg_url"; and echo "  "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Site:")(set_color normal)(set_color cyan)"$pkg_url"(set_color normal)
-            echo ""
-            printf '%s' $prompt_compact
     end
 end

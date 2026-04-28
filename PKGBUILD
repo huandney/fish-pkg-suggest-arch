@@ -27,6 +27,8 @@ package() {
     "$pkgdir/usr/share/fish/vendor_functions.d/fish_command_not_found.fish"
   install -Dm644 functions/__fcnf_print.fish \
     "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_print.fish"
+  install -Dm644 functions/__fcnf_prompt.fish \
+    "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_prompt.fish"
   install -Dm644 functions/fcnf-preview.fish \
     "$pkgdir/usr/share/fish/vendor_functions.d/fcnf-preview.fish"
   install -Dm644 completions/fcnf.fish \

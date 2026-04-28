@@ -29,8 +29,9 @@ function fish_command_not_found
 
     __fcnf_print $layout $argv[1] $repo $pkg $matches
 
+    set -l prompt (__fcnf_prompt $layout $pkg)
     set -l confirm
-    read -n 1 confirm
+    read -n 1 -P "$prompt" confirm
     echo ""
 
     if string match -qri '^(s|y)?$' -- $confirm
