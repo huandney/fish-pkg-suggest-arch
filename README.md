@@ -1,63 +1,73 @@
 # fish-pkg-suggest-arch
 
-A smart `command-not-found` handler for Fish shell on Arch Linux that suggests and allows interactive installation of missing packages.
+A `command_not_found` handler for [Fish shell](https://fishshell.com) on Arch Linux. When a command is not found, it queries `pkgfile` to identify the package that provides it and offers an interactive prompt to install it immediately.
 
-⚠️ **Requirements:**
+<!-- demo.gif -->
+
+## Requirements
+
 - Arch Linux
-- `pacman`
-- `pkgfile`
-- `expac`
+- [`pkgfile`](https://archlinux.org/packages/extra/x86_64/pkgfile/)
+- [`expac`](https://archlinux.org/packages/extra/x86_64/expac/)
 
 ## Installation
 
-Using [Fisher](https://github.com/jorgebucaran/fisher):
+**Via Fisher:**
 
 ```fish
 fisher install huandney/fish-pkg-suggest-arch
 ```
 
-Or via AUR (recommended on Arch — pulls dependencies automatically):
+**Via AUR** (pulls dependencies automatically):
 
 ```bash
-# clone the repo and run makepkg, or use your AUR helper
 makepkg -si
 ```
 
-### Setup `pkgfile`
-The plugin needs the `pkgfile` cache initialized to suggest packages. Pick **one**:
+### Setting up pkgfile
 
-- **Manual** — initialize once, update when you want:
+The plugin requires the `pkgfile` file database to be initialized. Choose one option:
+
+- **Manual** — run once, update on demand:
   ```bash
   sudo pkgfile -u
   ```
-- **Automatic (recommended)** — daily background updates via the timer shipped by `pkgfile`:
+
+- **Systemd timer** (recommended) — automatic daily updates:
   ```bash
   sudo systemctl enable --now pkgfile-update.timer
   ```
-- **Pacman hook (advanced)** — refresh after every install/upgrade. Adds 5-30s of synchronous latency to each `pacman` transaction; only worth it if you need fresher data than daily. Create `/etc/pacman.d/hooks/pkgfile-update.hook` yourself if you want this.
 
-If the cache isn't initialized, the plugin will tell you on the first failed command — no silent failures.
+- **Pacman hook** (advanced) — updates after every pacman transaction. Adds a few seconds of latency per install; only worthwhile if daily updates are not fresh enough. See the [pkgfile wiki](https://wiki.archlinux.org/title/Pkgfile) for hook setup.
+
+If the cache is not initialized, the plugin will tell you on the first failed command.
 
 ## Features
-- Interactive prompt `[S/n]` to install missing packages directly from official repositories.
-- Three layout modes (`compact`, `classic`, `minimal`). Default is `compact`.
-- Useful package metadata: version, install + download size, description (in classic), packager, build date.
-- Terminal hyperlinks to the official Arch Linux package page (for `core`, `extra`, `multilib`).
+
+- Interactive `[Y/n]` prompt to install the missing package without leaving the shell.
+- Three display modes: `compact`, `classic`, and `minimal`. Default is `compact`.
+- Package metadata: version, installed and download size, description, packager, build date.
+- Clickable terminal hyperlinks to the official Arch package page (`core`, `extra`, `multilib`).
+- Automatic language detection: displays in Portuguese or English based on the system locale.
 
 ## Configuration
 
-Pick a layout with a fish universal variable:
+Set a layout persistently with a universal variable:
 
 ```fish
-set -U fcnf_layout compact   # default — denso, ícones e cores
-set -U fcnf_layout classic   # uma linha por campo, mais informação
-set -U fcnf_layout minimal   # estilo pacman puro, sem ícones
+set -U fcnf_layout compact   # default — dense, icons and colors
+set -U fcnf_layout classic   # one line per field, more information
+set -U fcnf_layout minimal   # pure pacman style, no icons
 ```
 
-Tab-completion is provided for `fcnf_layout` values.
+Tab-completion is available for `fcnf_layout` values.
 
-To preview all three layouts side by side with a real package, run:
+To preview all three layouts with a real package:
 
 ```fish
 fcnf-preview
 ```
+
+## License
+
+MIT

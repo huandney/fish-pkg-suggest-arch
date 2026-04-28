@@ -48,31 +48,34 @@ function __fcnf_print --argument-names layout cmd repo pkg
     switch $layout
         case classic
             set -l w 15
-            echo (set_color --bold blue)":: "(set_color normal)"O pacote para "(set_color --bold red)"$cmd"(set_color normal)" não está instalado."
+            set -l _installed (__fcnf_i18n lbl_installed)
+            set -l _download (__fcnf_i18n lbl_download)
+
+            echo (set_color --bold blue)":: "(set_color normal)(__fcnf_i18n hdr_pkg)" "(set_color --bold red)"$cmd"(set_color normal)" "(__fcnf_i18n not_installed)
             echo ""
-            echo "  "(set_color --bold)(string pad -rw $w "Repositório")(set_color normal)(set_color blue)"$repo_display"(set_color normal)
+            echo "  "(set_color --bold)(string pad -rw $w (__fcnf_i18n lbl_repo))(set_color normal)(set_color blue)"$repo_display"(set_color normal)
             if test (count $alts_formatted) -gt 0
-                echo "  "(string pad -rw $w "")(set_color --dim)"(também em: "(string join ", " $alts_formatted)")"(set_color normal)
+                echo "  "(string pad -rw $w "")(set_color --dim)"("(__fcnf_i18n also_in)" "(string join ", " $alts_formatted)")"(set_color normal)
             end
-            test -n "$pkg_version"; and echo "  "(set_color --bold)(string pad -rw $w "Versão")(set_color normal)(set_color magenta)"$pkg_version"(set_color normal)
-            test -n "$pkg_description"; and echo "  "(set_color --bold)(string pad -rw $w "Descrição")(set_color normal)"$pkg_description"
+            test -n "$pkg_version"; and echo "  "(set_color --bold)(string pad -rw $w (__fcnf_i18n lbl_version))(set_color normal)(set_color magenta)"$pkg_version"(set_color normal)
+            test -n "$pkg_description"; and echo "  "(set_color --bold)(string pad -rw $w (__fcnf_i18n lbl_desc))(set_color normal)"$pkg_description"
 
             set -l size_line ""
             if test -n "$pkg_size"
-                set size_line "$pkg_size instalado"
-                test -n "$pkg_dlsize"; and set size_line "$size_line "(set_color --dim)"($pkg_dlsize download)"(set_color normal)
+                set size_line "$pkg_size $_installed"
+                test -n "$pkg_dlsize"; and set size_line "$size_line "(set_color --dim)"($pkg_dlsize $_download)"(set_color normal)
             else if test -n "$pkg_dlsize"
-                set size_line "$pkg_dlsize download"
+                set size_line "$pkg_dlsize $_download"
             end
-            test -n "$size_line"; and echo "  "(set_color --bold)(string pad -rw $w "Tamanho")(set_color normal)(set_color yellow)"$size_line"(set_color normal)
+            test -n "$size_line"; and echo "  "(set_color --bold)(string pad -rw $w (__fcnf_i18n lbl_size))(set_color normal)(set_color yellow)"$size_line"(set_color normal)
 
-            test -n "$pkg_builddate"; and echo "  "(set_color --bold)(string pad -rw $w "Compilação")(set_color normal)"$pkg_builddate"
-            test -n "$pkg_packager"; and echo "  "(set_color --bold)(string pad -rw $w "Empacotador")(set_color normal)"$pkg_packager"
-            test -n "$pkg_url"; and echo "  "(set_color --bold)(string pad -rw $w "Site Oficial")(set_color normal)(set_color cyan)"$pkg_url"(set_color normal)
+            test -n "$pkg_builddate"; and echo "  "(set_color --bold)(string pad -rw $w (__fcnf_i18n lbl_build))(set_color normal)"$pkg_builddate"
+            test -n "$pkg_packager"; and echo "  "(set_color --bold)(string pad -rw $w (__fcnf_i18n lbl_packager))(set_color normal)"$pkg_packager"
+            test -n "$pkg_url"; and echo "  "(set_color --bold)(string pad -rw $w (__fcnf_i18n lbl_site))(set_color normal)(set_color cyan)"$pkg_url"(set_color normal)
             echo ""
 
         case minimal
-            echo (set_color --bold blue)":: "(set_color normal)"O comando "(set_color --bold red)"$cmd"(set_color normal)" não foi encontrado."
+            echo (set_color --bold blue)":: "(set_color normal)(__fcnf_i18n hdr_cmd)" "(set_color --bold red)"$cmd"(set_color normal)" "(__fcnf_i18n not_found)
 
             set -l detail ""
             test -n "$pkg_version"; and set detail "v$pkg_version"
@@ -84,7 +87,7 @@ function __fcnf_print --argument-names layout cmd repo pkg
                 end
             end
 
-            set -l line (set_color --bold blue)":: "(set_color normal)"Pertence a "(set_color blue)"$repo_display"(set_color normal)
+            set -l line (set_color --bold blue)":: "(set_color normal)(__fcnf_i18n belongs_to)" "(set_color blue)"$repo_display"(set_color normal)
             test -n "$detail"; and set line "$line ($detail)"
             set line "$line."
             echo $line
@@ -105,12 +108,12 @@ function __fcnf_print --argument-names layout cmd repo pkg
                 end
             end
 
-            echo (set_color --bold blue)":: "(set_color normal)"O comando "(set_color --bold red)"$cmd"(set_color normal)" não está instalado."
-            echo "   "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Pacote:")(set_color normal)"$pkg_line"
+            echo (set_color --bold blue)":: "(set_color normal)(__fcnf_i18n hdr_cmd)" "(set_color --bold red)"$cmd"(set_color normal)" "(__fcnf_i18n not_installed)
+            echo "   "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w (__fcnf_i18n lbl_pkg_compact))(set_color normal)"$pkg_line"
             if test (count $alts_formatted) -gt 0
-                echo "     "(set_color --dim)"também em: "(string join ", " $alts_formatted)(set_color normal)
+                echo "     "(set_color --dim)(__fcnf_i18n also_in)" "(string join ", " $alts_formatted)(set_color normal)
             end
-            test -n "$build_line"; and echo "   "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Build:")(set_color normal)"$build_line"
-            test -n "$pkg_url"; and echo "   "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Site:")(set_color normal)(set_color cyan)"$pkg_url"(set_color normal)
+            test -n "$build_line"; and echo "   "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w (__fcnf_i18n lbl_build_compact))(set_color normal)"$build_line"
+            test -n "$pkg_url"; and echo "   "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w (__fcnf_i18n lbl_site_compact))(set_color normal)(set_color cyan)"$pkg_url"(set_color normal)
     end
 end

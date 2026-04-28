@@ -1,8 +1,8 @@
 function __fcnf_prompt --argument-names layout pkg
     switch $layout
         case minimal
-            echo (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)"Deseja instalar? [S/n]: "(set_color normal)
+            echo (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)(__fcnf_i18n prompt_minimal)(set_color normal)
         case '*'
-            echo (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)"Deseja instalar $pkg agora? [S/n] "(set_color normal)
+            echo (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)(__fcnf_i18n prompt_install $pkg)(set_color normal)
     end
 end

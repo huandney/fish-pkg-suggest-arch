@@ -1,6 +1,6 @@
 function fcnf-preview --description 'Mostra os 3 layouts do fish-pkg-suggest-arch'
     if not command -q expac
-        echo "expac não está instalado."
+        echo (__fcnf_i18n expac_missing)
         return 1
     end
 
@@ -17,5 +17,5 @@ function fcnf-preview --description 'Mostra os 3 layouts do fish-pkg-suggest-arc
         echo ""
     end
 
-    echo "Para escolher: "(set_color --bold)"set -U fcnf_layout <compact|classic|minimal>"(set_color normal)
+    echo (__fcnf_i18n preview_choose)" "(set_color --bold)"set -U fcnf_layout <compact|classic|minimal>"(set_color normal)
 end
