@@ -33,4 +33,6 @@ package() {
     "$pkgdir/usr/share/fish/vendor_functions.d/fcnf-preview.fish"
   install -Dm644 completions/fcnf.fish \
     "$pkgdir/usr/share/fish/vendor_completions.d/fcnf.fish"
+  install -Dm644 conf.d/fcnf.fish \
+    "$pkgdir/usr/share/fish/vendor_conf.d/fcnf.fish"
 }

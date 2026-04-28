@@ -105,7 +105,7 @@ function __fcnf_print --argument-names layout cmd repo pkg
                 end
             end
 
-            echo (set_color --bold blue)":: "(set_color normal)"Comando não está instalado."
+            echo (set_color --bold blue)":: "(set_color normal)"O comando "(set_color --bold red)"$cmd"(set_color normal)" não está instalado."
             echo "   "(set_color --bold cyan)"↳"(set_color normal)" "(set_color --bold)(string pad -rw $w "Pacote:")(set_color normal)"$pkg_line"
             if test (count $alts_formatted) -gt 0
                 echo "     "(set_color --dim)"também em: "(string join ", " $alts_formatted)(set_color normal)
