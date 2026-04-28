@@ -40,6 +40,24 @@ If the cache isn't initialized, the plugin will tell you on the first failed com
 
 ## Features
 - Interactive prompt `[S/n]` to install missing packages directly from official repositories.
-- Two layout modes (`compact` and `classic`). The default is `compact`. To use the classic view, set `set -g fcnf_layout classic` in your `config.fish`.
-- Displays useful package metadata: size, version, packager, and build date.
-- Terminal hyperlinking support to easily navigate to the official Arch Linux package website.
+- Three layout modes (`compact`, `classic`, `minimal`). Default is `compact`.
+- Useful package metadata: version, install + download size, description (in classic), packager, build date.
+- Terminal hyperlinks to the official Arch Linux package page (for `core`, `extra`, `multilib`).
+
+## Configuration
+
+Pick a layout with a fish universal variable:
+
+```fish
+set -U fcnf_layout compact   # default — denso, ícones e cores
+set -U fcnf_layout classic   # uma linha por campo, mais informação
+set -U fcnf_layout minimal   # estilo pacman puro, sem ícones
+```
+
+Tab-completion is provided for `fcnf_layout` values.
+
+To preview all three layouts side by side with a real package, run:
+
+```fish
+fcnf-preview
+```

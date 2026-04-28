@@ -22,8 +22,13 @@ pkgver() {
 
 package() {
   cd "$srcdir/${_pkgname}"
-  
-  # Instala a função no diretório global de vendors do Fish
+
   install -Dm644 functions/fish_command_not_found.fish \
     "$pkgdir/usr/share/fish/vendor_functions.d/fish_command_not_found.fish"
+  install -Dm644 functions/__fcnf_print.fish \
+    "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_print.fish"
+  install -Dm644 functions/fcnf-preview.fish \
+    "$pkgdir/usr/share/fish/vendor_functions.d/fcnf-preview.fish"
+  install -Dm644 completions/fcnf.fish \
+    "$pkgdir/usr/share/fish/vendor_completions.d/fcnf.fish"
 }
