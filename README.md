@@ -3,9 +3,7 @@
 A `command_not_found` handler for [Fish shell](https://fishshell.com) on Arch Linux. When a command is not found, it queries `pkgfile` to identify the package that provides it and offers an interactive prompt to install it immediately.
 
 <!-- demo.gif -->
-<img width="792" height="445" alt="Recording 2026-04-28 at 05 37 52" src="https://github.com/user-attachments/assets/4fd10fe2-dd56-41f4-8b71-c625d1d47ded" />
-
-
+![Demonstration](https://github.com/user-attachments/assets/4fd10fe2-dd56-41f4-8b71-c625d1d47ded)
 
 ## Requirements
 
