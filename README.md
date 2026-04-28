@@ -19,9 +19,11 @@ A `command_not_found` handler for [Fish shell](https://fishshell.com) on Arch Li
 fisher install huandney/fish-pkg-suggest-arch
 ```
 
-**Via AUR** (pulls dependencies automatically):
+**Via PKGBUILD** (pulls dependencies automatically):
 
 ```bash
+git clone https://github.com/huandney/fish-pkg-suggest-arch
+cd fish-pkg-suggest-arch
 makepkg -si
 ```
 
