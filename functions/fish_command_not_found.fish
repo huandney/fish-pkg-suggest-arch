@@ -41,6 +41,11 @@ function fish_command_not_found
 
     set -l confirm
     read -n 1 -P (__fcnf_prompt $layout $pkg) confirm
+    or begin
+        echo ""
+        echo (__fcnf_i18n op_cancelled)
+        return
+    end
     echo ""
 
     switch (string lower -- $confirm)
