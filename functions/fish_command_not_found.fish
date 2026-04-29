@@ -1,6 +1,15 @@
 function fish_command_not_found
-    # Master kill-switch: delega para o handler default do fish e sai.
+    # Master kill-switch: replica o snippet de /usr/share/doc/pkgfile/
+    # command-not-found.fish (sugestão de pacote sem prompt) e cai no default
+    # do fish quando não há match. Comportamento equivalente a um Arch sem
+    # nosso plugin, mas com o snippet do pkgfile sourceado.
     if set -q fcnf_enabled; and test "$fcnf_enabled" = false
+        set -l pkgs (pkgfile -bv -- "$argv[1]" 2>/dev/null)
+        if test (count $pkgs) -gt 0
+            printf '%s may be found in the following packages:\n' "$argv[1]"
+            printf '  %s\n' $pkgs
+            return
+        end
         __fish_default_command_not_found_handler $argv
         return
     end
