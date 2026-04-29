@@ -2,7 +2,7 @@
 
 _pkgname=fish-pkg-suggest-arch
 pkgname=${_pkgname}-git
-pkgver=r14.3d061f2 # Will be auto-updated by pkgver()
+pkgver=r20.f72e3c9 # Will be auto-updated by pkgver()
 pkgrel=1
 pkgdesc="A smart command-not-found handler for Fish shell on Arch Linux"
 arch=('any')
@@ -12,7 +12,7 @@ depends=('fish' 'pkgfile' 'expac' 'pacman')
 makedepends=('git')
 provides=("${_pkgname}")
 conflicts=("${_pkgname}")
-source=("git+file://${PWD}#branch=feature/sudo-passthrough")
+source=("git+file://${PWD}#branch=feature/sudo-wrapper-optin")
 sha256sums=('SKIP')
 
 pkgver() {
