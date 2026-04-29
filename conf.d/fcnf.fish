@@ -57,8 +57,6 @@ function __fcnf_preexec --on-event fish_preexec
         return
     end
 
-    echo ""
-
     # Warning block — shown before the package list.
     if test $warn_path -eq 1
         echo (set_color --bold yellow)"::"(set_color normal)" "(set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n batch_warn_cmds)
