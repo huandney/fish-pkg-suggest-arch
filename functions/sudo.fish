@@ -1,4 +1,13 @@
 function sudo
+    # Em scripts/automações, vaza direto para o sudo do sistema. Garante que a
+    # mensagem nativa 'sudo: cmd: command not found' permaneça intacta para
+    # ferramentas que parseiam stderr, e que nossos prompts [I/E/C] nunca
+    # sejam apresentados a um não-humano.
+    if not status is-interactive
+        command sudo $argv
+        return
+    end
+
     # Reusa o mesmo parser que o preexec usa para descer em sudo, garantindo
     # que ambos enxerguem o mesmo "comando interno" diante de flags exóticas.
     set -l cmd (__fcnf_sudo_inner_cmd "sudo $argv")
