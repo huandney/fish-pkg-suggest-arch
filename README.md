@@ -127,6 +127,17 @@ When enabled, the plugin defines a `sudo` function that detects the inner comman
 
 The pipeline batch flow already understands `sudo` as a transparent prefix regardless of this flag — `sudo cmdA; cmdB` triggers batch mode if both are missing.
 
+## Development
+
+To work on the plugin without going through `makepkg` on every change, symlink the project files into your fish config:
+
+```fish
+./dev-link.fish              # creates symlinks in ~/.config/fish
+./dev-link.fish --unlink     # removes them
+```
+
+After running it, `exec fish` reloads the shell with your live edits. For functions already loaded in the current session (e.g. `sudo`), use `functions --erase <name>` first.
+
 ## License
 
 MIT
