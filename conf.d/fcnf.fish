@@ -153,6 +153,21 @@ function __fcnf_preexec --on-event fish_preexec
     or set __fcnf_handled $miss_cmds
 end
 
+function __fcnf_on_noconfirm_change --on-variable fcnf_pacman_noconfirm
+    if not set -q fcnf_pacman_noconfirm
+        echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n noconfirm_off)
+        return
+    end
+    switch $fcnf_pacman_noconfirm
+        case true
+            echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n noconfirm_on)
+        case false
+            echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n noconfirm_off)
+        case '*'
+            echo (set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n noconfirm_invalid)
+    end
+end
+
 function __fcnf_on_layout_change --on-variable fcnf_layout
     if not set -q fcnf_layout
         return

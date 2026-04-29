@@ -87,6 +87,12 @@ function __fcnf_i18n --argument-names key sub1
         case 'en:layout_changed'; echo "fish-pkg-suggest-arch layout:"
         case 'pt:layout_invalid'; echo "inválido. Use: compact, classic ou minimal."
         case 'en:layout_invalid'; echo "invalid. Use: compact, classic or minimal."
+        case 'pt:noconfirm_on';      echo "Instalação silenciosa ativada (--noconfirm)."
+        case 'en:noconfirm_on';      echo "Silent install enabled (--noconfirm)."
+        case 'pt:noconfirm_off';     echo "Instalação silenciosa desativada."
+        case 'en:noconfirm_off';     echo "Silent install disabled."
+        case 'pt:noconfirm_invalid'; echo "valor inválido para fcnf_pacman_noconfirm. Use: true ou false."
+        case 'en:noconfirm_invalid'; echo "invalid value for fcnf_pacman_noconfirm. Use: true or false."
 
         # fcnf-preview
         case 'pt:expac_missing';  echo "expac não está instalado."
