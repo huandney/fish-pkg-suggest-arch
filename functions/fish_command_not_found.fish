@@ -1,9 +1,9 @@
 function fish_command_not_found
     if set -q __fcnf_handled; and contains -- $argv[1] $__fcnf_handled
         # preexec already prompted/installed/cancelled this — don't re-ask.
-        # Return 0 (not 127) to suppress fish's ^~~~^ error indicator, since
-        # the command was handled intentionally, not missed unexpectedly.
-        return 0
+        # Cleanup is automatic on next preexec; leaving the list intact lets
+        # other skipped commands in the same pipeline find themselves here too.
+        return 127
     end
 
     if not command -q pkgfile
