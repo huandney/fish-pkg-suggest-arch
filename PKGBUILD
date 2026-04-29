@@ -12,7 +12,7 @@ depends=('fish' 'pkgfile' 'expac' 'pacman')
 makedepends=('git')
 provides=("${_pkgname}")
 conflicts=("${_pkgname}")
-source=("git+file://${PWD}#branch=feature/sudo-wrapper-optin")
+source=("git+file://${PWD}#branch=master")
 sha256sums=('SKIP')
 
 pkgver() {
