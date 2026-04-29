@@ -1,10 +1,4 @@
-function __fcnf_print_batch_item --argument-names idx cmd repo pkg w_cmd w_pkg
-    set -l info (expac -S '%v\t%m\t%d' $pkg 2>/dev/null)
-    set -l fields (string split \t -- $info)
-    set -l ver $fields[1]
-    set -l size_bytes $fields[2]
-    set -l desc $fields[3]
-
+function __fcnf_print_batch_item --argument-names idx cmd repo pkg w_cmd w_pkg ver size_bytes desc
     set -l size ""
     if test -n "$size_bytes"; and test "$size_bytes" -gt 0 2>/dev/null
         set size (numfmt --to=iec --suffix=B $size_bytes)

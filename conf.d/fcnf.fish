@@ -64,10 +64,11 @@ function __fcnf_preexec --on-event fish_preexec
             echo "     "(set_color --bold red)$cmd(set_color normal)
         end
         echo ""
-        echo (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)(__fcnf_i18n batch_available $n)(set_color normal)
-    else
-        echo (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)(__fcnf_i18n batch_summary $n)(set_color normal)
     end
+
+    # Header da lista — mesma estrutura visual nos dois caminhos, só muda a mensagem.
+    set -l header_msg (test $warn_path -eq 1; and __fcnf_i18n batch_available $n; or __fcnf_i18n batch_summary $n)
+    echo (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)$header_msg(set_color normal)
     echo ""
 
     set -l w_cmd 0
@@ -79,8 +80,23 @@ function __fcnf_preexec --on-event fish_preexec
         test $lp -gt $w_pkg; and set w_pkg $lp
     end
 
+    # Uma única chamada ao expac para todos os pacotes — evita N forks no loop de render.
+    # Indexamos por nome porque expac pula pacotes não resolvidos, o que quebraria ordem posicional.
+    set -l meta_lines (expac -S '%n\t%v\t%m\t%d' $miss_pkgs 2>/dev/null)
     for i in (seq $n)
-        __fcnf_print_batch_item $i $miss_cmds[$i] $miss_repos[$i] $miss_pkgs[$i] $w_cmd $w_pkg
+        set -l ver ""
+        set -l size_bytes ""
+        set -l desc ""
+        for ml in $meta_lines
+            set -l f (string split \t -- $ml)
+            if test "$f[1]" = "$miss_pkgs[$i]"
+                set ver $f[2]
+                set size_bytes $f[3]
+                set desc $f[4]
+                break
+            end
+        end
+        __fcnf_print_batch_item $i $miss_cmds[$i] $miss_repos[$i] $miss_pkgs[$i] $w_cmd $w_pkg $ver $size_bytes $desc
     end
     echo ""
 
@@ -89,12 +105,9 @@ function __fcnf_preexec --on-event fish_preexec
         echo ""
     end
 
+    set -l prompt_msg (test $warn_path -eq 1; and __fcnf_i18n batch_prompt_warn; or __fcnf_i18n batch_prompt)
     set -l choice
-    if test $warn_path -eq 1
-        read -P (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)(__fcnf_i18n batch_prompt_warn)(set_color normal) choice
-    else
-        read -P (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)(__fcnf_i18n batch_prompt)(set_color normal) choice
-    end
+    read -P (set_color --bold blue)"::"(set_color normal)" "(set_color --bold)$prompt_msg(set_color normal) choice
     or begin
         echo ""
         echo (__fcnf_i18n op_cancelled)
