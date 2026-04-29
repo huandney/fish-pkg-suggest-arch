@@ -18,8 +18,17 @@ function __fcnf_preexec --on-event fish_preexec
     set -l local_miss
 
     for seg in $segments
-        set -l tok (string split -m 1 ' ' -- (string trim -- $seg))[1]
+        set -l seg_trim (string trim -- $seg)
+        set -l tok (string split -m 1 ' ' -- $seg_trim)[1]
         test -z "$tok"; and continue
+
+        # sudo é prefixo transparente: descer para o comando real para que
+        # `sudo cmd_ausente; outro_ausente` dispare batch também.
+        if test "$tok" = sudo
+            set tok (__fcnf_sudo_inner_cmd $seg_trim)
+            test -z "$tok"; and continue
+        end
+
         string match -qr '^[A-Za-z_][A-Za-z0-9_+.-]*$' -- $tok; or continue
         contains -- $tok $keywords; and continue
         contains -- $tok $seen; and continue
@@ -176,6 +185,21 @@ function __fcnf_on_noconfirm_change --on-variable fcnf_pacman_noconfirm
             echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n noconfirm_off)
         case '*'
             echo (set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n noconfirm_invalid)
+    end
+end
+
+function __fcnf_on_sudo_wrapper_change --on-variable fcnf_sudo_wrapper
+    if not set -q fcnf_sudo_wrapper
+        echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n sudo_wrapper_off)
+        return
+    end
+    switch $fcnf_sudo_wrapper
+        case true
+            echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n sudo_wrapper_on)
+        case false
+            echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n sudo_wrapper_off)
+        case '*'
+            echo (set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n sudo_wrapper_invalid)
     end
 end
 
