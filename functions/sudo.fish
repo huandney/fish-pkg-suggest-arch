@@ -1,23 +1,25 @@
 function sudo
-    # Opt-in: wrapper só age se o usuário ativou explicitamente.
-    # Sem flag (ou != true) → comportamento padrão de sudo.
+    # Reusa o mesmo parser que o preexec usa para descer em sudo, garantindo
+    # que ambos enxerguem o mesmo "comando interno" diante de flags exóticas.
+    set -l cmd (__fcnf_sudo_inner_cmd "sudo $argv")
+
+    # preexec já tratou esse comando neste fish_preexec (instalou ou cancelou)
+    # → suprime totalmente. Sem isso, fish executaria 'sudo cmd_ausente' e o
+    # sudo do sistema pediria senha antes de falhar com 'command not found'.
+    # Este short-circuit roda independente do opt-in: é correção, não feature.
+    if set -q __fcnf_handled; and contains -- "$cmd" $__fcnf_handled
+        return 0
+    end
+
+    # Opt-in para o prompt de instalação no caso de 1 comando ausente.
+    # Sem fcnf_sudo_wrapper=true, deixa o sudo do sistema cuidar da mensagem.
     if not set -q fcnf_sudo_wrapper; or test "$fcnf_sudo_wrapper" != true
         command sudo $argv
         return
     end
 
-    # Reusa o mesmo parser que o preexec usa para descer em sudo, garantindo
-    # que ambos enxerguem o mesmo "comando interno" diante de flags exóticas.
-    set -l cmd (__fcnf_sudo_inner_cmd "sudo $argv")
-
     # Sem comando detectado, ou comando já existe → sudo direto.
     if test -z "$cmd"; or type -q "$cmd"
-        command sudo $argv
-        return
-    end
-
-    # preexec já tratou esse comando neste fish_preexec — não re-perguntar.
-    if set -q __fcnf_handled; and contains -- "$cmd" $__fcnf_handled
         command sudo $argv
         return
     end
