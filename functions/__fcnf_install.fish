@@ -2,7 +2,8 @@ function __fcnf_install
     # Wraps `sudo pacman -S --needed $argv` with raw-mode safe TTY handling
     # and consistent success/failure reporting. Returns pacman's exit status.
     set -l pacman_args -S --needed
-    contains -- "$fcnf_pacman_noconfirm" 1 true yes; and set -a pacman_args --noconfirm
+    # Listener em conf.d valida apenas true|false — manter o mesmo contrato aqui.
+    test "$fcnf_pacman_noconfirm" = true; and set -a pacman_args --noconfirm
 
     set -l stty_state (stty -g 2>/dev/null)
     stty sane 2>/dev/null
