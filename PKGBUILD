@@ -2,7 +2,7 @@
 
 _pkgname=fish-pkg-suggest-arch
 pkgname=${_pkgname}-git
-pkgver=r28.417030d # Will be auto-updated by pkgver()
+pkgver=r14.3d061f2 # Will be auto-updated by pkgver()
 pkgrel=1
 pkgdesc="A smart command-not-found handler for Fish shell on Arch Linux"
 arch=('any')

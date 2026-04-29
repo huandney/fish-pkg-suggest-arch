@@ -70,7 +70,7 @@ Two or more missing commands in the same line: a `fish_preexec` hook runs *befor
     2  cmatrix  →  cachyos-extra-v3/cmatrix  v2.0-4.1      95KB
        └─ Matrix screen saver
 
-:: Pacotes a instalar (Enter=todos, ex: 1 2 ou 1-3, c=cancelar):
+:: Pacotes a instalar ([T]odos, ex: 1 2 ou 1-3, [C]ancelar):
 ```
 
 After installing, the original pipeline runs automatically — no need to retype.
@@ -97,7 +97,19 @@ fcnf-preview
 
 ### Configuring pacman confirmation
 
-By default, Pacman will present its own confirmation prompt (showing download sizes and dependencies) after you say "Yes" to the plugin. If you want a fully automatic installation without the second prompt, enable the fast mode:
+By default, pacman shows its own confirmation prompt (download sizes, dependencies) after the plugin prompts. The interaction looks like this:
+
+```
+:: [I]nstalar / [E]xecutar após / [C]ancelar: i
+
+Pacote (1)              Versão nova   Diferença
+
+extra/nyancat           1.5.2-3.1      0,04 MiB
+
+:: Continuar a instalação? [S/n]        ← prompt do pacman
+```
+
+To skip the pacman prompt and install immediately after confirming in the plugin:
 
 ```fish
 set -U fcnf_pacman_noconfirm true
