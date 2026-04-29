@@ -42,6 +42,7 @@ function __fcnf_preexec --on-event fish_preexec
     # Phase 1 — pure in-memory filtering. No I/O.
     set -l seen
     set -l local_miss
+    set -l sudo_disabled_present 0
 
     for seg in $segments
         set -l seg_trim (string trim -- $seg)
@@ -50,10 +51,13 @@ function __fcnf_preexec --on-event fish_preexec
 
         # sudo é prefixo transparente: descer para o comando real para que
         # `sudo cmd_ausente; outro_ausente` dispare batch também.
-        # Quando o wrapper está desligado (fcnf_sudo_wrapper=false), o batch
-        # também ignora o prefixo — kill-switch consistente com a função shadow.
         if test "$tok" = sudo
+            # Wrapper desligado: kill-switch total. Marca a linha como
+            # "off-limits" — qualquer ausência em outros segmentos também
+            # será suprimida no fish_command_not_found, evitando UX híbrida
+            # onde metade da linha é tratada e a outra metade falha nativa.
             if set -q fcnf_sudo_wrapper; and test "$fcnf_sudo_wrapper" = false
+                set sudo_disabled_present 1
                 continue
             end
             set tok (__fcnf_sudo_inner_cmd $seg_trim)
@@ -66,6 +70,14 @@ function __fcnf_preexec --on-event fish_preexec
         set -a seen $tok
         type -q $tok; and continue
         set -a local_miss $tok
+    end
+
+    # Linha contém sudo com wrapper desligado → suprime tudo.
+    # Marca os tokens ausentes como já-tratados para que fish_command_not_found
+    # também se cale; o sudo nativo cuidará da própria mensagem.
+    if test $sudo_disabled_present -eq 1
+        test (count $local_miss) -gt 0; and set __fcnf_handled $local_miss
+        return
     end
 
     # Single (or no) missing → let fish_command_not_found handle it. No I/O here.
