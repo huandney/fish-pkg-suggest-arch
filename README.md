@@ -1,9 +1,34 @@
 # fish-pkg-suggest-arch
 
-A `command_not_found` handler for [Fish shell](https://fishshell.com) on Arch Linux. When a command is not found, it queries `pkgfile` to identify the package that provides it and offers an interactive prompt to install it immediately.
+A `command_not_found` handler for [Fish shell](https://fishshell.com) on Arch Linux. When a command is missing, it queries `pkgfile` to identify the package that provides it and prompts you to install it on the spot — for a single command or for an entire pipeline of missing commands at once.
 
-<!-- demo.gif -->
-![Demonstration](https://github.com/user-attachments/assets/4fd10fe2-dd56-41f4-8b71-c625d1d47ded)
+## Modes
+
+### Single mode — one missing command
+
+Standard reactive flow: the shell fails, the plugin prints the package details and asks. Zero overhead on a normal command.
+
+<!-- single-demo.gif -->
+![Single mode](https://github.com/user-attachments/assets/4fd10fe2-dd56-41f4-8b71-c625d1d47ded)
+
+### Batch mode — pipeline with two or more missing commands
+
+A `fish_preexec` hook runs *before* the line executes, splits on `|`, `&&`, `||`, `;`, `&`, identifies which positions are real commands the system can't resolve, and presents a single unified prompt. Pick all, a subset, or cancel — no need to retype the line afterwards.
+
+<!-- batch-demo.gif -->
+
+```
+:: 2 pacotes ausentes para executar esta linha:
+
+    1  nyancat  →  cachyos-extra-v3/nyancat  v1.5.2-3.1    42KB
+       └─ Terminal-based nyancat animation
+    2  cmatrix  →  cachyos-extra-v3/cmatrix  v2.0-4.1      95KB
+       └─ Matrix screen saver
+
+:: Pacotes a instalar ([T]odos, ex: 1 2 ou 1-3, [C]ancelar):
+```
+
+Both modes also work behind `sudo` (e.g. `sudo missing-cmd` or `sudo cmdA; cmdB`). Language auto-detects from the system locale (Portuguese / English).
 
 ## Requirements
 
@@ -27,146 +52,78 @@ cd fish-pkg-suggest-arch
 makepkg -si
 ```
 
-### Configuration requirements
+### Initialize the pkgfile database
 
-The plugin requires the `pkgfile` file database to be initialized. Choose one option:
+The plugin needs `pkgfile`'s file database. Pick one:
 
-- **Manual** — run once, update on demand:
-  ```bash
-  sudo pkgfile -u
-  ```
+- **Manual**: `sudo pkgfile -u` (run once, refresh on demand).
+- **Systemd timer (recommended)**: `sudo systemctl enable --now pkgfile-update.timer`.
+- **Pacman hook (advanced)**: refreshes after every pacman transaction. Adds latency per install. See the [pkgfile wiki](https://wiki.archlinux.org/title/Pkgfile).
 
-- **Systemd timer** (recommended) — automatic daily updates:
-  ```bash
-  sudo systemctl enable --now pkgfile-update.timer
-  ```
-
-- **Pacman hook** (advanced) — updates after every pacman transaction. Adds a few seconds of latency per install; only worthwhile if daily updates are not fresh enough. See the [pkgfile wiki](https://wiki.archlinux.org/title/Pkgfile) for hook setup.
-
-If the cache is not initialized, the plugin will tell you on the first failed command.
-
-## Features
-
-- Interactive `[Y/n]` prompt to install the missing package without leaving the shell.
-- **Batch mode for pipelines**: when a single line references multiple missing commands (e.g. `foo | bar | baz`), the plugin detects them all up front and offers a unified prompt — install all, pick a subset, or cancel — instead of forcing one Enter per missing command.
-- Three display modes: `compact`, `classic`, and `minimal`. Default is `compact`.
-- Package metadata: version, installed and download size, description, packager, build date.
-- Clickable terminal hyperlinks to the official Arch package page (`core`, `extra`, `multilib`).
-- Automatic language detection: displays in Portuguese or English based on the system locale.
-
-### How batch mode works
-
-Single missing command: standard reactive flow — the shell fails, the plugin shows the package details, prompts to install. Fast, zero overhead on a normal command.
-
-Two or more missing commands in the same line: a `fish_preexec` hook runs *before* the line executes. It splits on `|`, `&&`, `||`, `;`, `&`, identifies which positions are real commands the system can't resolve, and presents a single summary:
-
-<!-- batch-demo.gif -->
-
-```
-:: 2 pacotes ausentes para executar esta linha:
-
-    1  nyancat  →  cachyos-extra-v3/nyancat  v1.5.2-3.1    42KB
-       └─ Terminal-based nyancat animation
-    2  cmatrix  →  cachyos-extra-v3/cmatrix  v2.0-4.1      95KB
-       └─ Matrix screen saver
-
-:: Pacotes a instalar ([T]odos, ex: 1 2 ou 1-3, [C]ancelar):
-```
-
-After installing, the original pipeline runs automatically — no need to retype.
+If the cache is missing, the plugin tells you on the first failed command.
 
 ## Configuration
 
-### Configuring the layout
+All options are universal variables. Changes take effect immediately, no reload needed.
 
-Set a layout persistently with a universal variable:
+| Variable | Values | Default | Effect |
+|---|---|---|---|
+| `fcnf_enabled` | `true` / `false` | `true` (unset) | Master kill-switch. `false` puts the plugin completely out of the way. |
+| `fcnf_layout` | `compact` / `classic` / `minimal` | `compact` | Visual style of the package details. Run `fcnf-preview` to compare all three. |
+| `fcnf_pacman_noconfirm` | `true` / `false` | `false` (unset) | When `true`, skips pacman's own `Continuar? [S/n]` prompt after the plugin's confirmation. |
+| `fcnf_sudo_wrapper` | `true` / `false` | `true` (unset) | Controls whether the shadow `sudo` function is mounted (see below). |
 
-```fish
-set -U fcnf_layout compact   # default — dense, icons and colors
-set -U fcnf_layout classic   # one line per field, more information
-set -U fcnf_layout minimal   # pure pacman style, no icons
-```
-
-Tab-completion is available for `fcnf_layout` values.
-
-To preview all three layouts with a real package:
+Example:
 
 ```fish
-fcnf-preview
-```
-
-### Configuring pacman confirmation
-
-By default, pacman shows its own confirmation prompt (download sizes, dependencies) after the plugin prompts. The interaction looks like this:
-
-```
-:: [I]nstalar / [E]xecutar após / [C]ancelar: i
-
-Pacote (1)              Versão nova   Diferença
-
-extra/nyancat           1.5.2-3.1      0,04 MiB
-
-:: Continuar a instalação? [S/n]        ← prompt do pacman
-```
-
-To skip the pacman prompt and install immediately after confirming in the plugin:
-
-```fish
+set -U fcnf_layout classic
 set -U fcnf_pacman_noconfirm true
 ```
 
-### Master kill-switch
+### Master kill-switch (`fcnf_enabled`)
 
-To temporarily disable the entire plugin without uninstalling it (debugging a script, suspecting interference, isolating a regression):
+Useful for debugging a script or isolating interference without uninstalling.
 
 ```fish
-set -U fcnf_enabled false   # plugin out of the way: native command-not-found, no batch, no sudo wrapper
+set -U fcnf_enabled false   # plugin out of the way
 set -U fcnf_enabled true    # re-enable
 set -e fcnf_enabled         # same as true (default)
 ```
 
-When `false`, `fish_command_not_found` falls through to the fish default handler, the preexec hook returns immediately, and the shadow `sudo` function is erased from memory. This master flag takes precedence over `fcnf_sudo_wrapper`.
+When `false`: `fish_command_not_found` mirrors the standard `pkgfile` suggestion (then falls back to fish's default), the preexec hook short-circuits, and the shadow `sudo` function is erased from memory. This flag takes precedence over `fcnf_sudo_wrapper`.
 
-### Sudo wrapper
+### Sudo wrapper (`fcnf_sudo_wrapper`)
 
-By default, the plugin installs a shadow `sudo` function that intercepts `sudo missing-cmd` and offers an `[I]nstall / [R]un after / [C]ancel` prompt — the same flow as a bare missing command, but for privileged invocations. It also guarantees that when the batch flow handles a missing command behind `sudo` (e.g. `sudo cmdA; cmdB`), fish does not later run the original `sudo cmdA` and trigger a stray password prompt before failing.
+By default, the plugin mounts a shadow `sudo` function that intercepts `sudo missing-cmd` and offers `[I]nstall / [R]un after / [C]ancel`. It also prevents a stray password prompt when the batch flow has just handled a missing command behind `sudo`.
 
-The wrapper is **dynamically mounted** by `conf.d/fcnf.fish` based on `fcnf_sudo_wrapper`. The autoload file is named `__fcnf_sudo.fish`, so the name `sudo` is never claimed at the file level — it only exists in memory while the feature is enabled.
+The wrapper is **dynamically mounted** at runtime by `conf.d/fcnf.fish`. The autoload file is named `__fcnf_sudo.fish`, so the name `sudo` is never claimed at the file level — it only exists in memory while enabled.
 
 | `fcnf_sudo_wrapper` | Effect |
 |---|---|
-| unset (default) or `true` | The shadow `sudo` function is defined; batch flow descends into `sudo` prefixes. |
-| `false` | The shadow function is erased from memory; batch flow ignores `sudo` prefixes entirely. The `sudo` name is fully released — other plugins that wrap `sudo` work normally, and the system `sudo` binary runs without any indirection. |
+| unset (default) or `true` | Shadow `sudo` function is defined; batch flow descends into `sudo` prefixes. |
+| `false` | Shadow function is erased; batch flow ignores `sudo`. The `sudo` name is fully released — other plugins that wrap `sudo` work normally. |
 
-Toggle at runtime — change takes effect immediately, no reload needed:
-
-```fish
-set -U fcnf_sudo_wrapper false   # full kill-switch: native sudo, no interception anywhere
-set -U fcnf_sudo_wrapper true    # re-enable
-set -e fcnf_sudo_wrapper         # same as true (default)
-```
-
-When the wrapper is on, the order of decisions inside the function is (top-down, fail-fast):
+Decision flow when the wrapper is on (top-down, fail-fast):
 
 | Guard | Behavior |
 |---|---|
-| Non-interactive shell (subshell, command substitution, script) | Forwards to `command sudo` immediately. |
-| Command was already handled by the batch flow this turn | Returns silently. Suppresses the stray password prompt. |
-| No inner command, or it already exists, or no pkgfile cache, or no package match | Forwards to `command sudo`. |
+| Non-interactive context (subshell, command substitution, script) | Forwards to `command sudo`. |
+| Command was already handled by the batch flow this turn | Returns silently. |
+| No inner command, command already exists, no pkgfile cache, or no package match | Forwards to `command sudo`. |
 | TTY interactive prompt | Shows `[I]nstall / [R]un after / [C]ancel`. |
 
-**Compatibility with other `sudo`-wrapping plugins.** Fish allows only one function definition per name, and load order decides which wins. If you use another plugin that wraps `sudo` (password caching, sudoedit helpers, etc.), set `fcnf_sudo_wrapper false` — our function is removed from memory and the other plugin's wrapper takes over cleanly.
+**Compatibility with other `sudo`-wrapping plugins.** Fish allows only one function definition per name. If you use another plugin that wraps `sudo`, set `fcnf_sudo_wrapper false` — our function is removed from memory and the other plugin takes over cleanly.
 
 ## Development
 
-To work on the plugin without going through `makepkg` on every change, symlink the project files into your fish config:
+Symlink the project into your fish config to iterate without `makepkg`:
 
 ```fish
 ./dev-link.fish              # creates symlinks in ~/.config/fish
 ./dev-link.fish --unlink     # removes them
 ```
 
-After running it, `exec fish` reloads the shell with your live edits. For functions already loaded in the current session (e.g. `sudo`), use `functions --erase <name>` first.
+After running it, `exec fish` reloads the shell. For functions already loaded in the current session (e.g. `sudo`), `functions --erase <name>` first.
 
 ## License
 
