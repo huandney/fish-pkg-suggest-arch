@@ -1,23 +1,23 @@
 function sudo
-    set -l cmd ""
-    set -l skip_next 0
-
-    for arg in $argv
-        if test $skip_next -eq 1
-            set skip_next 0
-            continue
-        end
-        if string match -q -- '-*' $arg
-            # These short flags consume the next argument
-            string match -qr '^-[CDgprtTu]$' -- $arg; and set skip_next 1
-            continue
-        end
-        set cmd $arg
-        break
+    # Opt-in: wrapper só age se o usuário ativou explicitamente.
+    # Sem flag (ou != true) → comportamento padrão de sudo.
+    if not set -q fcnf_sudo_wrapper; or test "$fcnf_sudo_wrapper" != true
+        command sudo $argv
+        return
     end
+
+    # Reusa o mesmo parser que o preexec usa para descer em sudo, garantindo
+    # que ambos enxerguem o mesmo "comando interno" diante de flags exóticas.
+    set -l cmd (__fcnf_sudo_inner_cmd "sudo $argv")
 
     # Sem comando detectado, ou comando já existe → sudo direto.
     if test -z "$cmd"; or type -q "$cmd"
+        command sudo $argv
+        return
+    end
+
+    # preexec já tratou esse comando neste fish_preexec — não re-perguntar.
+    if set -q __fcnf_handled; and contains -- "$cmd" $__fcnf_handled
         command sudo $argv
         return
     end
@@ -50,6 +50,11 @@ function sudo
 
     set -l confirm
     read -n 1 -P (__fcnf_prompt $layout $pkg) confirm
+    or begin
+        echo ""
+        echo (__fcnf_i18n op_cancelled)
+        return
+    end
     echo ""
 
     switch (string lower -- $confirm)

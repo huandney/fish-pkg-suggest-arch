@@ -115,6 +115,18 @@ To skip the pacman prompt and install immediately after confirming in the plugin
 set -U fcnf_pacman_noconfirm true
 ```
 
+### Sudo passthrough (opt-in)
+
+By default, typing `sudo missing-cmd` lets `sudo` itself report `command not found`. To make the plugin intercept and offer to install the package even behind `sudo`, opt in:
+
+```fish
+set -U fcnf_sudo_wrapper true
+```
+
+When enabled, the plugin defines a `sudo` function that detects the inner command, prompts to install (same UI as the regular flow), and then runs the original `sudo` invocation. Disable with `set -e fcnf_sudo_wrapper` or `set -U fcnf_sudo_wrapper false`.
+
+The pipeline batch flow already understands `sudo` as a transparent prefix regardless of this flag — `sudo cmdA; cmdB` triggers batch mode if both are missing.
+
 ## License
 
 MIT

@@ -93,6 +93,12 @@ function __fcnf_i18n --argument-names key sub1
         case 'en:noconfirm_off';     echo "Silent install disabled."
         case 'pt:noconfirm_invalid'; echo "valor inválido para fcnf_pacman_noconfirm. Use: true ou false."
         case 'en:noconfirm_invalid'; echo "invalid value for fcnf_pacman_noconfirm. Use: true or false."
+        case 'pt:sudo_wrapper_on';      echo "Wrapper de sudo ativado."
+        case 'en:sudo_wrapper_on';      echo "Sudo wrapper enabled."
+        case 'pt:sudo_wrapper_off';     echo "Wrapper de sudo desativado."
+        case 'en:sudo_wrapper_off';     echo "Sudo wrapper disabled."
+        case 'pt:sudo_wrapper_invalid'; echo "valor inválido para fcnf_sudo_wrapper. Use: true ou false."
+        case 'en:sudo_wrapper_invalid'; echo "invalid value for fcnf_sudo_wrapper. Use: true or false."
 
         # fcnf-preview
         case 'pt:expac_missing';  echo "expac não está instalado."
