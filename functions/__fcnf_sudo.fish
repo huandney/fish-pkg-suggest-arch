@@ -1,30 +1,21 @@
-function sudo
-    # Em scripts/automações, vaza direto para o sudo do sistema. Garante que a
-    # mensagem nativa 'sudo: cmd: command not found' permaneça intacta para
-    # ferramentas que parseiam stderr, e que nossos prompts [I/E/C] nunca
-    # sejam apresentados a um não-humano.
+function __fcnf_sudo
+    # Cinto-e-suspensórios: se algo herdar essa função em contexto não-interativo
+    # (subshell, command substitution, script rodando dentro de shell interativo),
+    # vaza direto para o sudo do sistema.
     if not status is-interactive
         command sudo $argv
         return
     end
 
-    # Reusa o mesmo parser que o preexec usa para descer em sudo, garantindo
-    # que ambos enxerguem o mesmo "comando interno" diante de flags exóticas.
+    # Mesmo parser que o preexec usa, para que ambos enxerguem o mesmo
+    # "comando interno" diante de flags exóticas do sudo.
     set -l cmd (__fcnf_sudo_inner_cmd "sudo $argv")
 
     # preexec já tratou esse comando neste fish_preexec (instalou ou cancelou)
     # → suprime totalmente. Sem isso, fish executaria 'sudo cmd_ausente' e o
     # sudo do sistema pediria senha antes de falhar com 'command not found'.
-    # Este short-circuit roda independente do opt-in: é correção, não feature.
     if set -q __fcnf_handled; and contains -- "$cmd" $__fcnf_handled
         return 0
-    end
-
-    # Opt-in para o prompt de instalação no caso de 1 comando ausente.
-    # Sem fcnf_sudo_wrapper=true, deixa o sudo do sistema cuidar da mensagem.
-    if not set -q fcnf_sudo_wrapper; or test "$fcnf_sudo_wrapper" != true
-        command sudo $argv
-        return
     end
 
     # Sem comando detectado, ou comando já existe → sudo direto.

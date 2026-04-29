@@ -50,7 +50,12 @@ function __fcnf_preexec --on-event fish_preexec
 
         # sudo é prefixo transparente: descer para o comando real para que
         # `sudo cmd_ausente; outro_ausente` dispare batch também.
+        # Quando o wrapper está desligado (fcnf_sudo_wrapper=false), o batch
+        # também ignora o prefixo — kill-switch consistente com a função shadow.
         if test "$tok" = sudo
+            if set -q fcnf_sudo_wrapper; and test "$fcnf_sudo_wrapper" = false
+                continue
+            end
             set tok (__fcnf_sudo_inner_cmd $seg_trim)
             test -z "$tok"; and continue
         end
@@ -214,18 +219,31 @@ function __fcnf_on_noconfirm_change --on-variable fcnf_pacman_noconfirm
     end
 end
 
-function __fcnf_on_sudo_wrapper_change --on-variable fcnf_sudo_wrapper
-    if not set -q fcnf_sudo_wrapper
-        echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n sudo_wrapper_off)
-        return
+function __fcnf_setup_sudo_wrapper
+    # Disjuntor: monta ou destrói a função shadow `sudo` em memória.
+    # Default (variável unset) e `true` montam; `false` destrói.
+    # Como o arquivo no autoload se chama __fcnf_sudo.fish, o nome `sudo`
+    # nunca é reclamado pelo plugin no nível de arquivo — só existe se nós
+    # criarmos aqui. Erase é definitivo dentro da sessão.
+    if not set -q fcnf_sudo_wrapper; or test "$fcnf_sudo_wrapper" = true
+        function sudo --wraps sudo
+            __fcnf_sudo $argv
+        end
+    else
+        functions --erase sudo 2>/dev/null
     end
-    switch $fcnf_sudo_wrapper
-        case true
-            echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n sudo_wrapper_on)
-        case false
-            echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n sudo_wrapper_off)
-        case '*'
-            echo (set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n sudo_wrapper_invalid)
+end
+
+__fcnf_setup_sudo_wrapper
+
+function __fcnf_on_sudo_wrapper_change --on-variable fcnf_sudo_wrapper
+    __fcnf_setup_sudo_wrapper
+    if not set -q fcnf_sudo_wrapper; or test "$fcnf_sudo_wrapper" = true
+        echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n sudo_wrapper_on)
+    else if test "$fcnf_sudo_wrapper" = false
+        echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n sudo_wrapper_off)
+    else
+        echo (set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n sudo_wrapper_invalid)
     end
 end
 

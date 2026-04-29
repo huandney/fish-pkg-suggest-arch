@@ -117,32 +117,33 @@ set -U fcnf_pacman_noconfirm true
 
 ### Sudo wrapper
 
-The plugin always defines a shadow `sudo` function. This is necessary so that when the batch flow handles a missing command behind `sudo` (e.g. `sudo cmdA; cmdB`), fish does not later run the original `sudo cmdA` and trigger a stray password prompt before failing. The wrapper has multiple early-exit guards so its impact stays minimal.
+By default, the plugin installs a shadow `sudo` function that intercepts `sudo missing-cmd` and offers an `[I]nstall / [R]un after / [C]ancel` prompt — the same flow as a bare missing command, but for privileged invocations. It also guarantees that when the batch flow handles a missing command behind `sudo` (e.g. `sudo cmdA; cmdB`), fish does not later run the original `sudo cmdA` and trigger a stray password prompt before failing.
 
-Order of decisions inside the function (top-down, fail-fast):
+The wrapper is **dynamically mounted** by `conf.d/fcnf.fish` based on `fcnf_sudo_wrapper`. The autoload file is named `__fcnf_sudo.fish`, so the name `sudo` is never claimed at the file level — it only exists in memory while the feature is enabled.
+
+| `fcnf_sudo_wrapper` | Effect |
+|---|---|
+| unset (default) or `true` | The shadow `sudo` function is defined; batch flow descends into `sudo` prefixes. |
+| `false` | The shadow function is erased from memory; batch flow ignores `sudo` prefixes entirely. The `sudo` name is fully released — other plugins that wrap `sudo` work normally, and the system `sudo` binary runs without any indirection. |
+
+Toggle at runtime — change takes effect immediately, no reload needed:
+
+```fish
+set -U fcnf_sudo_wrapper false   # full kill-switch: native sudo, no interception anywhere
+set -U fcnf_sudo_wrapper true    # re-enable
+set -e fcnf_sudo_wrapper         # same as true (default)
+```
+
+When the wrapper is on, the order of decisions inside the function is (top-down, fail-fast):
 
 | Guard | Behavior |
 |---|---|
-| Non-interactive shell (script, CI, hook) | Forwards to `command sudo` immediately. **Native sudo behavior is preserved for any non-human caller.** |
+| Non-interactive shell (subshell, command substitution, script) | Forwards to `command sudo` immediately. |
 | Command was already handled by the batch flow this turn | Returns silently. Suppresses the stray password prompt. |
-| `fcnf_sudo_wrapper` is unset or `false` | Forwards to `command sudo`. **Default off.** |
-| No inner command, or it already exists, or no pkgfile cache | Forwards to `command sudo`. |
+| No inner command, or it already exists, or no pkgfile cache, or no package match | Forwards to `command sudo`. |
 | TTY interactive prompt | Shows `[I]nstall / [R]un after / [C]ancel`. |
 
-Toggle the interactive prompt at runtime:
-
-```fish
-set -U fcnf_sudo_wrapper true    # enable the [I/R/C] prompt for `sudo missing-cmd`
-set -U fcnf_sudo_wrapper false   # disable; sudo's native "command not found" is shown
-set -e fcnf_sudo_wrapper         # same as false
-```
-
-**What the flag does *not* control:**
-
-- The pipeline batch flow (`sudo cmdA; cmdB` with both missing) — runs from `conf.d/` regardless of the flag, because that is the plugin's main value.
-- The post-batch suppression that prevents the stray password prompt.
-
-**Compatibility with other `sudo`-wrapping plugins.** This plugin defines a `sudo` function, which shadows any other plugin's `sudo` wrapper in the same fish session — only one definition wins, and load order decides. Even with `fcnf_sudo_wrapper=false`, our function still owns the name and forwards via `command sudo` (the system binary), which deliberately bypasses *every* function wrapper. If you rely on another plugin that wraps `sudo` (password caching, sudoedit helpers, etc.), remove our `sudo.fish` to fully restore the chain — the rest of the plugin keeps working without it. With the dev symlinks, that is `rm ~/.config/fish/functions/sudo.fish`.
+**Compatibility with other `sudo`-wrapping plugins.** Fish allows only one function definition per name, and load order decides which wins. If you use another plugin that wraps `sudo` (password caching, sudoedit helpers, etc.), set `fcnf_sudo_wrapper false` — our function is removed from memory and the other plugin's wrapper takes over cleanly.
 
 ## Development
 

@@ -2,7 +2,7 @@
 
 _pkgname=fish-pkg-suggest-arch
 pkgname=${_pkgname}-git
-pkgver=r20.f72e3c9 # Will be auto-updated by pkgver()
+pkgver=r27.482714f # Will be auto-updated by pkgver()
 pkgrel=1
 pkgdesc="A smart command-not-found handler for Fish shell on Arch Linux"
 arch=('any')
@@ -35,8 +35,8 @@ package() {
     "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_prompt.fish"
   install -Dm644 functions/__fcnf_install.fish \
     "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_install.fish"
-  install -Dm644 functions/sudo.fish \
-    "$pkgdir/usr/share/fish/vendor_functions.d/sudo.fish"
+  install -Dm644 functions/__fcnf_sudo.fish \
+    "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_sudo.fish"
   install -Dm644 functions/fcnf-preview.fish \
     "$pkgdir/usr/share/fish/vendor_functions.d/fcnf-preview.fish"
   install -Dm644 completions/fcnf.fish \
