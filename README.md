@@ -115,17 +115,34 @@ To skip the pacman prompt and install immediately after confirming in the plugin
 set -U fcnf_pacman_noconfirm true
 ```
 
-### Sudo passthrough (opt-in)
+### Sudo wrapper
 
-By default, typing `sudo missing-cmd` lets `sudo` itself report `command not found`. To make the plugin intercept and offer to install the package even behind `sudo`, opt in:
+The plugin always defines a shadow `sudo` function. This is necessary so that when the batch flow handles a missing command behind `sudo` (e.g. `sudo cmdA; cmdB`), fish does not later run the original `sudo cmdA` and trigger a stray password prompt before failing. The wrapper has multiple early-exit guards so its impact stays minimal.
+
+Order of decisions inside the function (top-down, fail-fast):
+
+| Guard | Behavior |
+|---|---|
+| Non-interactive shell (script, CI, hook) | Forwards to `command sudo` immediately. **Native sudo behavior is preserved for any non-human caller.** |
+| Command was already handled by the batch flow this turn | Returns silently. Suppresses the stray password prompt. |
+| `fcnf_sudo_wrapper` is unset or `false` | Forwards to `command sudo`. **Default off.** |
+| No inner command, or it already exists, or no pkgfile cache | Forwards to `command sudo`. |
+| TTY interactive prompt | Shows `[I]nstall / [R]un after / [C]ancel`. |
+
+Toggle the interactive prompt at runtime:
 
 ```fish
-set -U fcnf_sudo_wrapper true
+set -U fcnf_sudo_wrapper true    # enable the [I/R/C] prompt for `sudo missing-cmd`
+set -U fcnf_sudo_wrapper false   # disable; sudo's native "command not found" is shown
+set -e fcnf_sudo_wrapper         # same as false
 ```
 
-When enabled, the plugin defines a `sudo` function that detects the inner command, prompts to install (same UI as the regular flow), and then runs the original `sudo` invocation. Disable with `set -e fcnf_sudo_wrapper` or `set -U fcnf_sudo_wrapper false`.
+**What the flag does *not* control:**
 
-The pipeline batch flow already understands `sudo` as a transparent prefix regardless of this flag — `sudo cmdA; cmdB` triggers batch mode if both are missing.
+- The pipeline batch flow (`sudo cmdA; cmdB` with both missing) — runs from `conf.d/` regardless of the flag, because that is the plugin's main value.
+- The post-batch suppression that prevents the stray password prompt.
+
+**Compatibility with other `sudo`-wrapping plugins.** This plugin defines a `sudo` function, which shadows any other plugin's `sudo` wrapper in the same fish session — only one definition wins, and load order decides. Even with `fcnf_sudo_wrapper=false`, our function still owns the name and forwards via `command sudo` (the system binary), which deliberately bypasses *every* function wrapper. If you rely on another plugin that wraps `sudo` (password caching, sudoedit helpers, etc.), remove our `sudo.fish` to fully restore the chain — the rest of the plugin keeps working without it. With the dev symlinks, that is `rm ~/.config/fish/functions/sudo.fish`.
 
 ## Development
 
