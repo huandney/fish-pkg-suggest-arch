@@ -99,6 +99,12 @@ function __fcnf_i18n --argument-names key sub1
         case 'en:sudo_wrapper_off';     echo "Sudo wrapper disabled."
         case 'pt:sudo_wrapper_invalid'; echo "valor inválido para fcnf_sudo_wrapper. Use: true ou false."
         case 'en:sudo_wrapper_invalid'; echo "invalid value for fcnf_sudo_wrapper. Use: true or false."
+        case 'pt:plugin_enabled';   echo "Plugin ativado."
+        case 'en:plugin_enabled';   echo "Plugin enabled."
+        case 'pt:plugin_disabled';  echo "Plugin desativado (kill-switch via fcnf_enabled=false)."
+        case 'en:plugin_disabled';  echo "Plugin disabled (kill-switch via fcnf_enabled=false)."
+        case 'pt:plugin_invalid';   echo "valor inválido para fcnf_enabled. Use: true ou false."
+        case 'en:plugin_invalid';   echo "invalid value for fcnf_enabled. Use: true or false."
 
         # fcnf-preview
         case 'pt:expac_missing';  echo "expac não está instalado."

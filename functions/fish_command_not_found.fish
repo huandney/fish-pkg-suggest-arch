@@ -1,4 +1,10 @@
 function fish_command_not_found
+    # Master kill-switch: delega para o handler default do fish e sai.
+    if set -q fcnf_enabled; and test "$fcnf_enabled" = false
+        __fish_default_command_not_found_handler $argv
+        return
+    end
+
     if set -q __fcnf_handled; and contains -- $argv[1] $__fcnf_handled
         # preexec already prompted/installed/cancelled this — don't re-ask.
         # Cleanup is automatic on next preexec; leaving the list intact lets

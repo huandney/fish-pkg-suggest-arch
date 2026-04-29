@@ -28,6 +28,11 @@ function __fcnf_preexec --on-event fish_preexec
     # Reset to empty global so set -a appends globally for this run.
     set -g __fcnf_handled
 
+    # Master kill-switch: plugin inteiro fora do caminho.
+    if set -q fcnf_enabled; and test "$fcnf_enabled" = false
+        return
+    end
+
     command -q pkgfile; or return
     test -f /var/cache/pkgfile/.db_version; or return
 
@@ -233,10 +238,14 @@ end
 
 function __fcnf_setup_sudo_wrapper
     # Disjuntor: monta ou destrói a função shadow `sudo` em memória.
-    # Default (variável unset) e `true` montam; `false` destrói.
+    # Master `fcnf_enabled=false` vence sobre `fcnf_sudo_wrapper`.
     # Como o arquivo no autoload se chama __fcnf_sudo.fish, o nome `sudo`
     # nunca é reclamado pelo plugin no nível de arquivo — só existe se nós
     # criarmos aqui. Erase é definitivo dentro da sessão.
+    if set -q fcnf_enabled; and test "$fcnf_enabled" = false
+        functions --erase sudo 2>/dev/null
+        return
+    end
     if not set -q fcnf_sudo_wrapper; or test "$fcnf_sudo_wrapper" = true
         function sudo --wraps sudo
             __fcnf_sudo $argv
@@ -256,6 +265,18 @@ function __fcnf_on_sudo_wrapper_change --on-variable fcnf_sudo_wrapper
         echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n sudo_wrapper_off)
     else
         echo (set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n sudo_wrapper_invalid)
+    end
+end
+
+function __fcnf_on_enabled_change --on-variable fcnf_enabled
+    # Master kill-switch reagiu — refaz o estado da função sudo na hora.
+    __fcnf_setup_sudo_wrapper
+    if set -q fcnf_enabled; and test "$fcnf_enabled" = false
+        echo (set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n plugin_disabled)
+    else if not set -q fcnf_enabled; or test "$fcnf_enabled" = true
+        echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n plugin_enabled)
+    else
+        echo (set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n plugin_invalid)
     end
 end
 

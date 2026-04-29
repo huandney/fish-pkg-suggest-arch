@@ -115,6 +115,18 @@ To skip the pacman prompt and install immediately after confirming in the plugin
 set -U fcnf_pacman_noconfirm true
 ```
 
+### Master kill-switch
+
+To temporarily disable the entire plugin without uninstalling it (debugging a script, suspecting interference, isolating a regression):
+
+```fish
+set -U fcnf_enabled false   # plugin out of the way: native command-not-found, no batch, no sudo wrapper
+set -U fcnf_enabled true    # re-enable
+set -e fcnf_enabled         # same as true (default)
+```
+
+When `false`, `fish_command_not_found` falls through to the fish default handler, the preexec hook returns immediately, and the shadow `sudo` function is erased from memory. This master flag takes precedence over `fcnf_sudo_wrapper`.
+
 ### Sudo wrapper
 
 By default, the plugin installs a shadow `sudo` function that intercepts `sudo missing-cmd` and offers an `[I]nstall / [R]un after / [C]ancel` prompt — the same flow as a bare missing command, but for privileged invocations. It also guarantees that when the batch flow handles a missing command behind `sudo` (e.g. `sudo cmdA; cmdB`), fish does not later run the original `sudo cmdA` and trigger a stray password prompt before failing.
