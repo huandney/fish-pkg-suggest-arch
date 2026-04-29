@@ -2,7 +2,7 @@
 
 _pkgname=fish-pkg-suggest-arch
 pkgname=${_pkgname}-git
-pkgver=r8.4ee0d5f # Will be auto-updated by pkgver()
+pkgver=r28.417030d # Will be auto-updated by pkgver()
 pkgrel=1
 pkgdesc="A smart command-not-found handler for Fish shell on Arch Linux"
 arch=('any')
@@ -12,7 +12,7 @@ depends=('fish' 'pkgfile' 'expac' 'pacman')
 makedepends=('git')
 provides=("${_pkgname}")
 conflicts=("${_pkgname}")
-source=("git+${url}.git")
+source=("git+file://${PWD}#branch=feature/sudo-passthrough")
 sha256sums=('SKIP')
 
 pkgver() {
@@ -29,8 +29,14 @@ package() {
     "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_i18n.fish"
   install -Dm644 functions/__fcnf_print.fish \
     "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_print.fish"
+  install -Dm644 functions/__fcnf_print_batch_item.fish \
+    "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_print_batch_item.fish"
   install -Dm644 functions/__fcnf_prompt.fish \
     "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_prompt.fish"
+  install -Dm644 functions/__fcnf_install.fish \
+    "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_install.fish"
+  install -Dm644 functions/sudo.fish \
+    "$pkgdir/usr/share/fish/vendor_functions.d/sudo.fish"
   install -Dm644 functions/fcnf-preview.fish \
     "$pkgdir/usr/share/fish/vendor_functions.d/fcnf-preview.fish"
   install -Dm644 completions/fcnf.fish \

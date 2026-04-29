@@ -1,4 +1,11 @@
 function fish_command_not_found
+    if set -q __fcnf_handled; and contains -- $argv[1] $__fcnf_handled
+        # preexec already prompted/installed/cancelled this — don't re-ask.
+        # Cleanup is automatic on next preexec; leaving the list intact lets
+        # other skipped commands in the same pipeline find themselves here too.
+        return 127
+    end
+
     if not command -q pkgfile
         echo (__fcnf_i18n cmd_not_found)": $argv[1]"
         echo (__fcnf_i18n pkgfile_hint)
@@ -20,32 +27,29 @@ function fish_command_not_found
         return
     end
 
-    set -l full_pkg $matches[1]
-    set -l repo (string split "/" $full_pkg)[1]
-    set -l pkg (string split "/" $full_pkg)[2]
+    set -l parts (string split "/" $matches[1])
+    set -l repo $parts[1]
+    set -l pkg $parts[2]
 
     set -l layout compact
     test -n "$fcnf_layout"; and set layout $fcnf_layout
 
     __fcnf_print $layout $argv[1] $repo $pkg $matches
 
-    set -l prompt (__fcnf_prompt $layout $pkg)
+    # Don't block / steal stdin if invoked inside a pipe.
+    test -t 0; or return 127
+
     set -l confirm
-    read -n 1 -P "$prompt" confirm
+    read -n 1 -P (__fcnf_prompt $layout $pkg) confirm
     echo ""
 
-    if string match -qri '^(s|y)?$' -- $confirm
-        if sudo pacman -S $pkg
-            echo ""
-            echo "  "(set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n install_success)
-            echo ""
-        else
-            echo ""
-            echo "  "(set_color --bold red)"✗"(set_color normal)" "(__fcnf_i18n install_failed)
-            echo ""
-            return 1
-        end
-    else
-        echo (__fcnf_i18n op_cancelled)
+    switch (string lower -- $confirm)
+        case '' i
+            __fcnf_install $pkg
+        case e r
+            __fcnf_install $pkg
+            and $argv
+        case '*'
+            echo (__fcnf_i18n op_cancelled)
     end
 end
