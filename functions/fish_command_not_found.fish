@@ -1,4 +1,15 @@
 function fish_command_not_found
+    # Background-job guard: se o nosso process group não é o "owner" do TTY
+    # (foreground), estamos sendo invocados via `&`. Em paralelo com outros
+    # forks irmãos, todos disputam STDOUT (output sobreposto) e o SIGTTIN
+    # cancelaria qualquer `read`. Single point of truth: comparar pgrp == tpgid.
+    # Veja tests/test_fg_bg.fish para o comportamento desta técnica.
+    set -l pgrp (command ps -o pgrp= -p %self 2>/dev/null | string trim)
+    set -l tpgid (command ps -o tpgid= -p %self 2>/dev/null | string trim)
+    if test -n "$pgrp"; and test "$pgrp" != "$tpgid"
+        return 127
+    end
+
     # Master kill-switch: replica o snippet de /usr/share/doc/pkgfile/
     # command-not-found.fish (sugestão de pacote sem prompt) e cai no default
     # do fish quando não há match. Comportamento equivalente a um Arch sem

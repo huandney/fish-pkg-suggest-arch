@@ -1,4 +1,15 @@
 function __fcnf_sudo
+    # Background-job guard: invocações via `&` (ex: `sudo cmd &`) caem em um
+    # process group diferente do TTY owner. Mostrar prompt ali quebra a UX
+    # (output paralelo, SIGTTIN no `read`). Vaza para o sudo nativo, que
+    # imprime sua mensagem de erro e segue. Mesma lógica do fish_command_not_found.
+    set -l pgrp (command ps -o pgrp= -p %self 2>/dev/null | string trim)
+    set -l tpgid (command ps -o tpgid= -p %self 2>/dev/null | string trim)
+    if test -n "$pgrp"; and test "$pgrp" != "$tpgid"
+        command sudo $argv
+        return
+    end
+
     # Cinto-e-suspensórios: se algo herdar essa função em contexto não-interativo
     # (subshell, command substitution, script rodando dentro de shell interativo),
     # vaza direto para o sudo do sistema.
