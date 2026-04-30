@@ -49,12 +49,17 @@ function __fcnf_preexec --on-event fish_preexec
         set -a local_miss $tok
     end
 
-    # Bg tokens só são silenciados no caso degenerado de 1 ausente solo em bg
-    # ('nyancat &'). Não dá para prompar (SIGTTIN), então cala. Em multi-missing,
-    # o batch resolve tudo upfront — fish executa depois respeitando o '&'
-    # (intenção do usuário: instalar para que a linha rode como ele escreveu).
+    set -l n_miss (count $local_miss)
+    set -l n_total (count $seen)
+
+    # Nada ausente → nada a fazer.
+    test $n_miss -eq 0; and return
+
+    # Bg tokens só são silenciados no caso degenerado de comando solo em bg
+    # ('nyancat &'). Não dá para prompar (SIGTTIN), então cala. Em linha
+    # multi-comando, o batch roda no preexec (foreground) — prompt seguro.
     set -l bg_set (__fcnf_bg_tokens $cmdline)
-    if test (count $local_miss) -eq 1; and contains -- $local_miss[1] $bg_set
+    if test $n_miss -eq 1; and test $n_total -eq 1; and contains -- $local_miss[1] $bg_set
         set -a __fcnf_handled $local_miss[1]
         return
     end
@@ -63,19 +68,21 @@ function __fcnf_preexec --on-event fish_preexec
     # Marca os tokens ausentes como já-tratados para que fish_command_not_found
     # também se cale; o sudo nativo cuidará da própria mensagem.
     if test $sudo_disabled_present -eq 1
-        test (count $local_miss) -gt 0; and set -a __fcnf_handled $local_miss
+        set -a __fcnf_handled $local_miss
         return
     end
 
-    # Batch mode opt-out: 2+ ausentes numa linha → silencia tudo (sem
-    # "metralhadora" de prompts single). 1 ausente cai no fluxo single normal.
+    # Batch mode opt-out: linha multi-comando silencia tudo (sem "metralhadora"
+    # de prompts single). Comando solo cai no fluxo single normal.
     if set -q fcnf_batch_mode; and test "$fcnf_batch_mode" = false
-        test (count $local_miss) -ge 2; and set -a __fcnf_handled $local_miss
+        test $n_total -ge 2; and set -a __fcnf_handled $local_miss
         return
     end
 
-    # Single (or no) missing → let fish_command_not_found handle it. No I/O here.
-    test (count $local_miss) -lt 2; and return
+    # Comando solo com 1 ausente → fish_command_not_found cuida (single mode).
+    # Linha multi-comando entra em batch mesmo com só 1 ausente — o single
+    # prompt seria intrusivo no meio de um pipeline.
+    test $n_total -eq 1; and return
 
     # Phase 2 — I/O. Resolve only the locally-missing tokens via pkgfile.
     set -l miss_cmds
@@ -98,9 +105,9 @@ function __fcnf_preexec --on-event fish_preexec
     set -l n (count $miss_cmds)
     set -l warn_path (test (count $no_pkg_cmds) -gt 0; and echo 1; or echo 0)
 
-    # Need 2+ installable, or 1+ installable with a warning.
+    # Sem nada instalável → nada a mostrar (warn_path puro fica para o
+    # fish_command_not_found nativo lidar caso a caso).
     test $n -eq 0; and return
-    test $n -lt 2; and test $warn_path -eq 0; and return
 
     # Warning block — shown before the package list.
     if test $warn_path -eq 1
