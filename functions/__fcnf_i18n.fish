@@ -60,17 +60,51 @@ function __fcnf_i18n --argument-names key sub1
         case '*:lbl_build_compact';  echo "Build:"
         case '*:lbl_site_compact';   echo "Site:"
 
-        # prompts (__fcnf_prompt)
-        case 'pt:prompt_minimal'; echo "Deseja instalar? [S/n]: "
-        case 'en:prompt_minimal'; echo "Install? [Y/n]: "
-        case 'pt:prompt_install'; echo "Deseja instalar $sub1 agora? [S/n] "
-        case 'en:prompt_install'; echo "Install $sub1 now? [Y/n] "
+        # prompts (__fcnf_prompt) — single command / sudo
+        case 'pt:prompt_single';  echo "[I]nstalar / [E]xecutar após / [C]ancelar: "
+        case 'en:prompt_single';  echo "[I]nstall / [R]un after / [C]ancel: "
+        case 'pt:prompt_minimal'; echo "[I]nstalar / [E]xecutar / [C]ancelar: "
+        case 'en:prompt_minimal'; echo "[I]nstall / [R]un / [C]ancel: "
+
+        # batch flow — happy path (__fcnf_preexec)
+        case 'pt:batch_summary'; echo "$sub1 pacotes ausentes para executar esta linha:"
+        case 'en:batch_summary'; echo "$sub1 packages missing to run this line:"
+        case 'pt:batch_prompt';  echo "Pacotes a instalar ([T]odos, ex: 1 2 ou 1-3, [C]ancelar): "
+        case 'en:batch_prompt';  echo "Packages to install ([A]ll, e.g. 1 2 or 1-3, [C]ancel): "
+
+        # batch flow — warning path
+        case 'pt:batch_warn_cmds';   echo "Comando(s) não encontrado(s) em nenhum repositório:"
+        case 'en:batch_warn_cmds';   echo "Command(s) not found in any repository:"
+        case 'pt:batch_available';   echo "$sub1 pacotes disponíveis para instalação:"
+        case 'en:batch_available';   echo "$sub1 packages available to install:"
+        case 'pt:batch_warn_fail';   echo "A linha falhará mesmo após a instalação."
+        case 'en:batch_warn_fail';   echo "The line will still fail after installation."
+        case 'pt:batch_prompt_warn'; echo "Pacotes a instalar ([C]ancelar, ex: 1 2 ou 1-3, [T]odos): "
+        case 'en:batch_prompt_warn'; echo "Packages to install ([C]ancel, e.g. 1 2 or 1-3, [A]ll): "
 
         # conf.d
         case 'pt:layout_changed'; echo "Layout do fish-pkg-suggest-arch:"
         case 'en:layout_changed'; echo "fish-pkg-suggest-arch layout:"
         case 'pt:layout_invalid'; echo "inválido. Use: compact, classic ou minimal."
         case 'en:layout_invalid'; echo "invalid. Use: compact, classic or minimal."
+        case 'pt:noconfirm_on';      echo "Instalação silenciosa ativada (--noconfirm)."
+        case 'en:noconfirm_on';      echo "Silent install enabled (--noconfirm)."
+        case 'pt:noconfirm_off';     echo "Instalação silenciosa desativada."
+        case 'en:noconfirm_off';     echo "Silent install disabled."
+        case 'pt:noconfirm_invalid'; echo "valor inválido para fcnf_pacman_noconfirm. Use: true ou false."
+        case 'en:noconfirm_invalid'; echo "invalid value for fcnf_pacman_noconfirm. Use: true or false."
+        case 'pt:sudo_wrapper_on';      echo "Wrapper de sudo ativado."
+        case 'en:sudo_wrapper_on';      echo "Sudo wrapper enabled."
+        case 'pt:sudo_wrapper_off';     echo "Wrapper de sudo desativado."
+        case 'en:sudo_wrapper_off';     echo "Sudo wrapper disabled."
+        case 'pt:sudo_wrapper_invalid'; echo "valor inválido para fcnf_sudo_wrapper. Use: true ou false."
+        case 'en:sudo_wrapper_invalid'; echo "invalid value for fcnf_sudo_wrapper. Use: true or false."
+        case 'pt:plugin_enabled';   echo "Plugin ativado."
+        case 'en:plugin_enabled';   echo "Plugin enabled."
+        case 'pt:plugin_disabled';  echo "Plugin desativado (kill-switch via fcnf_enabled=false)."
+        case 'en:plugin_disabled';  echo "Plugin disabled (kill-switch via fcnf_enabled=false)."
+        case 'pt:plugin_invalid';   echo "valor inválido para fcnf_enabled. Use: true ou false."
+        case 'en:plugin_invalid';   echo "invalid value for fcnf_enabled. Use: true or false."
 
         # fcnf-preview
         case 'pt:expac_missing';  echo "expac não está instalado."
