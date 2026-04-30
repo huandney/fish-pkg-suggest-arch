@@ -24,6 +24,48 @@ function __fcnf_sudo_inner_cmd --argument-names seg
     end
 end
 
+function __fcnf_bg_tokens --argument-names cmdline
+    # Identifica tokens de comandos em jobs background (terminados por '&' singular).
+    # Esses precisam ser silenciados no fish_command_not_found, senão entram em
+    # disputa com o job control: read recebe SIGTTIN, prompt morre em
+    # "Operação cancelada", output paralelo se sobrepõe.
+    #
+    # Estratégia parse-time (mais confiável que checar PGRP em runtime, que
+    # falha por race com a transição fg→bg):
+    #   1. Protege '&&' (não é separador de job).
+    #   2. Split em ';' e '&' singular preservando o terminador.
+    #   3. Job que termina em '&' é background.
+    #   4. Dentro do job bg, extrai cada sub-comando via split em |, &&, ||.
+    set -l esc (printf '\001')
+    set -l mark (printf '\037')
+    set -l submark (printf '\036')
+    set -l protected (string replace -ar '&&' $esc -- $cmdline)
+
+    set -l marked (string replace -ar ';' ";$mark" -- $protected)
+    set marked (string replace -ar '&' "&$mark" -- $marked)
+
+    for job in (string split $mark -- $marked)
+        set job (string trim -- $job)
+        test -z "$job"; and continue
+        string match -q '*&' -- $job; or continue
+        set job (string sub -e -1 -- $job)
+        set job (string replace -ar $esc '&&' -- $job)
+
+        set -l subs (string split $submark -- (string replace -ar '\|\||&&|\|' $submark -- $job))
+        for sub in $subs
+            set sub (string trim -- $sub)
+            test -z "$sub"; and continue
+            set -l tok (string split -m 1 ' ' -- $sub)[1]
+            test -z "$tok"; and continue
+            if test "$tok" = sudo
+                set tok (__fcnf_sudo_inner_cmd $sub)
+                test -z "$tok"; and continue
+            end
+            echo $tok
+        end
+    end
+end
+
 function __fcnf_preexec --on-event fish_preexec
     # Reset to empty global so set -a appends globally for this run.
     set -g __fcnf_handled
@@ -77,18 +119,28 @@ function __fcnf_preexec --on-event fish_preexec
         set -a local_miss $tok
     end
 
+    # Bg tokens só são silenciados no caso degenerado de 1 ausente solo em bg
+    # ('nyancat &'). Não dá para prompar (SIGTTIN), então cala. Em multi-missing,
+    # o batch resolve tudo upfront — fish executa depois respeitando o '&'
+    # (intenção do usuário: instalar para que a linha rode como ele escreveu).
+    set -l bg_set (__fcnf_bg_tokens $cmdline)
+    if test (count $local_miss) -eq 1; and contains -- $local_miss[1] $bg_set
+        set -a __fcnf_handled $local_miss[1]
+        return
+    end
+
     # Linha contém sudo com wrapper desligado → suprime tudo.
     # Marca os tokens ausentes como já-tratados para que fish_command_not_found
     # também se cale; o sudo nativo cuidará da própria mensagem.
     if test $sudo_disabled_present -eq 1
-        test (count $local_miss) -gt 0; and set __fcnf_handled $local_miss
+        test (count $local_miss) -gt 0; and set -a __fcnf_handled $local_miss
         return
     end
 
     # Batch mode opt-out: 2+ ausentes numa linha → silencia tudo (sem
     # "metralhadora" de prompts single). 1 ausente cai no fluxo single normal.
     if set -q fcnf_batch_mode; and test "$fcnf_batch_mode" = false
-        test (count $local_miss) -ge 2; and set __fcnf_handled $local_miss
+        test (count $local_miss) -ge 2; and set -a __fcnf_handled $local_miss
         return
     end
 
@@ -175,7 +227,7 @@ function __fcnf_preexec --on-event fish_preexec
     or begin
         echo ""
         echo (__fcnf_i18n op_cancelled)
-        set __fcnf_handled $miss_cmds
+        set -a __fcnf_handled $miss_cmds
         return
     end
     set choice (string trim -- $choice)
@@ -183,7 +235,7 @@ function __fcnf_preexec --on-event fish_preexec
     # Cancel conditions: explicit 'c', or empty on warning path.
     if string match -qri '^c$' -- $choice; or begin test $warn_path -eq 1; and test -z "$choice"; end
         echo (__fcnf_i18n op_cancelled)
-        set __fcnf_handled $miss_cmds
+        set -a __fcnf_handled $miss_cmds
         return
     end
 
@@ -209,7 +261,7 @@ function __fcnf_preexec --on-event fish_preexec
 
         if test (count $selected) -eq 0
             echo (__fcnf_i18n op_cancelled)
-            set __fcnf_handled $miss_cmds
+            set -a __fcnf_handled $miss_cmds
             return
         end
 
@@ -225,7 +277,7 @@ function __fcnf_preexec --on-event fish_preexec
     test (count $to_install) -eq 0; and return
 
     __fcnf_install $to_install
-    or set __fcnf_handled $miss_cmds
+    or set -a __fcnf_handled $miss_cmds
 end
 
 function __fcnf_on_noconfirm_change --on-variable fcnf_pacman_noconfirm
