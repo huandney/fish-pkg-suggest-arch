@@ -119,20 +119,14 @@ function __fcnf_preexec --on-event fish_preexec
         set -a local_miss $tok
     end
 
-    # Tokens em jobs background ('&' singular) → silencia direto.
-    # Job control move o processo para bg, qualquer prompt aqui dispara SIGTTIN
-    # e quebra UX. Fish printará seu erro nativo limpo no lugar.
+    # Bg tokens só são silenciados no caso degenerado de 1 ausente solo em bg
+    # ('nyancat &'). Não dá para prompar (SIGTTIN), então cala. Em multi-missing,
+    # o batch resolve tudo upfront — fish executa depois respeitando o '&'
+    # (intenção do usuário: instalar para que a linha rode como ele escreveu).
     set -l bg_set (__fcnf_bg_tokens $cmdline)
-    if test (count $bg_set) -gt 0
-        set -l local_miss_fg
-        for tok in $local_miss
-            if contains -- $tok $bg_set
-                set -a __fcnf_handled $tok
-            else
-                set -a local_miss_fg $tok
-            end
-        end
-        set local_miss $local_miss_fg
+    if test (count $local_miss) -eq 1; and contains -- $local_miss[1] $bg_set
+        set -a __fcnf_handled $local_miss[1]
+        return
     end
 
     # Linha contém sudo com wrapper desligado → suprime tudo.
