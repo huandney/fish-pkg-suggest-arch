@@ -60,7 +60,7 @@ All options are universal variables. Changes take effect immediately, no reload 
 All options are universal variables, so they persist across sessions. Each block below lists the available values — copy the line you want.
 
 ```fish
-# Master kill-switch (default: enabled)
+# Master kill-switch.
 set -U fcnf_enabled false   # plugin out of the way: native pkgfile suggestion + fish default
 set -U fcnf_enabled true    # re-enable
 set -e fcnf_enabled         # remove the variable (= default = enabled)
@@ -70,7 +70,7 @@ set -U fcnf_layout compact
 set -U fcnf_layout classic
 set -U fcnf_layout minimal
 
-# Skip pacman's own "Continuar? [S/n]" prompt (default: off)
+# Skip pacman's own "Continue? [Y/n]" prompt (default: off)
 set -U fcnf_pacman_noconfirm true
 set -U fcnf_pacman_noconfirm false
 
