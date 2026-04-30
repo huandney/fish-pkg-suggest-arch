@@ -19,7 +19,7 @@ A `fish_preexec` hook runs *before* the line executes, splits on `|`, `&&`, `||`
 ![Single mode](https://github.com/user-attachments/assets/73fec785-abf5-48f6-9898-7a6e93266bd1)
 
 
-Both modes also work behind `sudo` (e.g. `sudo missing-cmd` or `sudo cmdA; cmdB`). Language auto-detects from the system locale (Portuguese / English).
+Both modes also work behind `sudo` (e.g. `sudo missing-cmd` or `sudo cmdA; cmdB`) and behind background operators (`cmd1 & cmd2`). When the line contains a single missing command running solo in background (`nyancat &`), the plugin stays silent — interactive prompts can't run from a backgrounded job. Language auto-detects from the system locale (Portuguese / English).
 
 ## Requirements
 
