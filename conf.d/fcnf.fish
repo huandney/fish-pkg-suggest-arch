@@ -217,7 +217,14 @@ function __fcnf_preexec --on-event fish_preexec
     or set -a __fcnf_handled $miss_cmds
 end
 
+function __fcnf_origin_is_self
+    # Universal vars disparam handlers em toda sessão. `fcnf set` grava
+    # __fcnf_origin_pid antes da var; só a sessão de origem ecoa feedback.
+    set -q __fcnf_origin_pid; and test "$__fcnf_origin_pid" = "$fish_pid"
+end
+
 function __fcnf_on_noconfirm_change --on-variable fcnf_pacman_noconfirm
+    __fcnf_origin_is_self; or return
     if not set -q fcnf_pacman_noconfirm
         echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n noconfirm_off)
         return
@@ -254,7 +261,9 @@ end
 __fcnf_setup_sudo_wrapper
 
 function __fcnf_on_sudo_wrapper_change --on-variable fcnf_sudo_wrapper
+    # Mutação de estado roda em toda sessão; só o eco é gateado.
     __fcnf_setup_sudo_wrapper
+    __fcnf_origin_is_self; or return
     if not set -q fcnf_sudo_wrapper
         echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n sudo_wrapper_on)
         return
@@ -272,6 +281,7 @@ end
 function __fcnf_on_enabled_change --on-variable fcnf_enabled
     # Master kill-switch reagiu — refaz o estado da função sudo na hora.
     __fcnf_setup_sudo_wrapper
+    __fcnf_origin_is_self; or return
     if not set -q fcnf_enabled
         echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n plugin_enabled)
         return
@@ -287,6 +297,7 @@ function __fcnf_on_enabled_change --on-variable fcnf_enabled
 end
 
 function __fcnf_on_batch_mode_change --on-variable fcnf_batch_mode
+    __fcnf_origin_is_self; or return
     if not set -q fcnf_batch_mode
         echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n batch_mode_on)
         return
@@ -302,6 +313,7 @@ function __fcnf_on_batch_mode_change --on-variable fcnf_batch_mode
 end
 
 function __fcnf_on_layout_change --on-variable fcnf_layout
+    __fcnf_origin_is_self; or return
     set -q fcnf_layout; or return
     switch $fcnf_layout
         case compact classic minimal

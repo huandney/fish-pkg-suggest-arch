@@ -55,52 +55,63 @@ If the cache is missing, the plugin tells you on the first failed command.
 
 ## Configuration
 
-All options are universal variables. Changes take effect immediately, no reload needed.
+All settings live in universal variables (persist across sessions, take effect immediately). Use the `fcnf` command to change them — it shows feedback only in the terminal where you ran it, instead of every open shell.
 
-All options are universal variables, so they persist across sessions. Each block below lists the available values — copy the line you want.
+```fish
+fcnf set <var> <value>   # set a configuration variable
+fcnf unset <var>         # revert to default
+fcnf preview             # show all three layouts side by side
+fcnf help                # show usage
+```
+
+Available variables: `enabled`, `layout`, `pacman_noconfirm`, `batch_mode`, `sudo_wrapper`.
 
 ```fish
 # Master kill-switch (default: enabled)
-set -U fcnf_enabled false   # plugin out of the way: native pkgfile suggestion + fish default
-set -U fcnf_enabled true    # re-enable
-set -e fcnf_enabled         # remove the variable (= default = enabled)
+fcnf set enabled false      # plugin out of the way: native pkgfile suggestion + fish default
+fcnf set enabled true       # re-enable
+fcnf unset enabled          # remove the variable (= default = enabled)
 
-# Layout (default: compact). Run `fcnf-preview` to compare all three.
-set -U fcnf_layout compact
-set -U fcnf_layout classic
-set -U fcnf_layout minimal
+# Layout (default: compact). Run `fcnf preview` to compare all three.
+fcnf set layout compact
+fcnf set layout classic
+fcnf set layout minimal
 
 # Skip pacman's own "Continuar? [S/n]" prompt (default: off)
-set -U fcnf_pacman_noconfirm true
-set -U fcnf_pacman_noconfirm false
+fcnf set pacman_noconfirm true
+fcnf set pacman_noconfirm false
 
 # Batch mode for pipelines (default: enabled)
-set -U fcnf_batch_mode false   # 1 missing = single prompt; 2+ missing = silent, native fish errors only
-set -U fcnf_batch_mode true
+fcnf set batch_mode false   # multi-command lines silenced (only fish's native errors)
+fcnf set batch_mode true
 
 # Sudo wrapper (default: enabled). See section below for the decision flow.
-set -U fcnf_sudo_wrapper false   # erase shadow sudo + ignore sudo in batch flow
-set -U fcnf_sudo_wrapper true
+fcnf set sudo_wrapper false # erase shadow sudo + ignore sudo in batch flow
+fcnf set sudo_wrapper true
 ```
+
+> Direct `set -U fcnf_*` still works (it's the underlying mechanism), but won't print the confirmation message and will *not* echo across other open terminals. The `fcnf` command exists specifically to scope feedback to the originating session.
 
 ### Master kill-switch (`fcnf_enabled`)
 
 Useful for debugging a script or isolating interference without uninstalling.
 
 ```fish
-set -U fcnf_enabled false   # plugin out of the way
-set -U fcnf_enabled true    # re-enable
-set -e fcnf_enabled         # same as true (default)
+fcnf set enabled false   # plugin out of the way
+fcnf set enabled true    # re-enable
+fcnf unset enabled       # same as true (default)
 ```
 
 When `false`: `fish_command_not_found` mirrors the standard `pkgfile` suggestion (then falls back to fish's default), the preexec hook short-circuits, and the shadow `sudo` function is erased from memory. This flag takes precedence over `fcnf_sudo_wrapper`.
 
 ### Batch mode (`fcnf_batch_mode`)
 
+Batch mode triggers on any line with **two or more real commands** (pipeline, `&&`, `||`, `;`, `&`), regardless of how many of them are missing. A line like `sudo nyancat | cmatrix` (only `nyancat` missing) shows the batch list because the single-mode prompt would be intrusive mid-pipeline.
+
 When `false`:
 
-- A line with **one** missing command still triggers the regular single-mode prompt.
-- A line with **two or more** missing commands is silenced entirely — no batch summary, no per-command prompts. You see only fish's native `command not found` errors. This avoids a "machine-gun" of prompts when you only wanted single mode.
+- A line with a single command still triggers the regular single-mode prompt.
+- A line with **two or more commands** is silenced entirely — no batch summary, no per-command prompts. You see only fish's native `command not found` errors. This avoids a "machine-gun" of prompts when you only wanted single mode.
 
 Caveat: the post-batch sudo-password suppression (which prevents a stray password prompt when you cancel a `sudo cmdA; cmdB` line) only runs when batch is on. `sudo missing-cmd` alone still works normally via the sudo wrapper.
 
@@ -124,7 +135,7 @@ Decision flow when the wrapper is on (top-down, fail-fast):
 | No inner command, command already exists, no pkgfile cache, or no package match | Forwards to `command sudo`. |
 | TTY interactive prompt | Shows `[I]nstall / [R]un after / [C]ancel`. |
 
-**Compatibility with other `sudo`-wrapping plugins.** Fish allows only one function definition per name. If you use another plugin that wraps `sudo`, set `fcnf_sudo_wrapper false` — our function is removed from memory and the other plugin takes over cleanly.
+**Compatibility with other `sudo`-wrapping plugins.** Fish allows only one function definition per name. If you use another plugin that wraps `sudo`, run `fcnf set sudo_wrapper false` — our function is removed from memory and the other plugin takes over cleanly.
 
 ## Development
 
