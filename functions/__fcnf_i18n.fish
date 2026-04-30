@@ -105,6 +105,12 @@ function __fcnf_i18n --argument-names key sub1
         case 'en:plugin_disabled';  echo "Plugin disabled (kill-switch via fcnf_enabled=false)."
         case 'pt:plugin_invalid';   echo "valor inválido para fcnf_enabled. Use: true ou false."
         case 'en:plugin_invalid';   echo "invalid value for fcnf_enabled. Use: true or false."
+        case 'pt:batch_mode_on';      echo "Modo batch ativado."
+        case 'en:batch_mode_on';      echo "Batch mode enabled."
+        case 'pt:batch_mode_off';     echo "Modo batch desativado (apenas single mode reativo)."
+        case 'en:batch_mode_off';     echo "Batch mode disabled (single mode only)."
+        case 'pt:batch_mode_invalid'; echo "valor inválido para fcnf_batch_mode. Use: true ou false."
+        case 'en:batch_mode_invalid'; echo "invalid value for fcnf_batch_mode. Use: true or false."
 
         # fcnf-preview
         case 'pt:expac_missing';  echo "expac não está instalado."

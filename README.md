@@ -57,18 +57,30 @@ If the cache is missing, the plugin tells you on the first failed command.
 
 All options are universal variables. Changes take effect immediately, no reload needed.
 
-| Variable | Values | Default | Effect |
-|---|---|---|---|
-| `fcnf_enabled` | `true` / `false` | `true` (unset) | Master kill-switch. `false` puts the plugin completely out of the way. |
-| `fcnf_layout` | `compact` / `classic` / `minimal` | `compact` | Visual style of the package details. Run `fcnf-preview` to compare all three. |
-| `fcnf_pacman_noconfirm` | `true` / `false` | `false` (unset) | When `true`, skips pacman's own `Continuar? [S/n]` prompt after the plugin's confirmation. |
-| `fcnf_sudo_wrapper` | `true` / `false` | `true` (unset) | Controls whether the shadow `sudo` function is mounted (see below). |
-
-Example:
+All options are universal variables, so they persist across sessions. Each block below lists the available values — copy the line you want.
 
 ```fish
+# Master kill-switch (default: enabled)
+set -U fcnf_enabled false   # plugin out of the way: native pkgfile suggestion + fish default
+set -U fcnf_enabled true    # re-enable
+set -e fcnf_enabled         # remove the variable (= default = enabled)
+
+# Layout (default: compact). Run `fcnf-preview` to compare all three.
+set -U fcnf_layout compact
 set -U fcnf_layout classic
+set -U fcnf_layout minimal
+
+# Skip pacman's own "Continuar? [S/n]" prompt (default: off)
 set -U fcnf_pacman_noconfirm true
+set -U fcnf_pacman_noconfirm false
+
+# Batch mode for pipelines (default: enabled)
+set -U fcnf_batch_mode false   # only single-cmd reactive flow; preexec hook stays out of the way
+set -U fcnf_batch_mode true
+
+# Sudo wrapper (default: enabled). See section below for the decision flow.
+set -U fcnf_sudo_wrapper false   # erase shadow sudo + ignore sudo in batch flow
+set -U fcnf_sudo_wrapper true
 ```
 
 ### Master kill-switch (`fcnf_enabled`)
@@ -82,6 +94,12 @@ set -e fcnf_enabled         # same as true (default)
 ```
 
 When `false`: `fish_command_not_found` mirrors the standard `pkgfile` suggestion (then falls back to fish's default), the preexec hook short-circuits, and the shadow `sudo` function is erased from memory. This flag takes precedence over `fcnf_sudo_wrapper`.
+
+### Batch mode (`fcnf_batch_mode`)
+
+When `false`, the `fish_preexec` hook short-circuits and pipelines with multiple missing commands fall through to the regular single-command flow (one prompt per failure, in fish's default order). Useful if you prefer to handle one missing command at a time.
+
+Caveat: the post-batch sudo-password suppression (which prevents a stray password prompt when you cancel a `sudo cmdA; cmdB` line) only runs from the batch flow. With batch off, that specific edge case is no longer handled — `sudo missing-cmd` alone still works normally via the sudo wrapper.
 
 ### Sudo wrapper (`fcnf_sudo_wrapper`)
 

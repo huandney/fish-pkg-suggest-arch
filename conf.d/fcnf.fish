@@ -33,6 +33,12 @@ function __fcnf_preexec --on-event fish_preexec
         return
     end
 
+    # Batch mode opt-out: usuário prefere lidar com uma ausência por vez via
+    # fish_command_not_found (single mode). Sudo wrapper continua ativo.
+    if set -q fcnf_batch_mode; and test "$fcnf_batch_mode" = false
+        return
+    end
+
     command -q pkgfile; or return
     test -f /var/cache/pkgfile/.db_version; or return
 
@@ -277,6 +283,16 @@ function __fcnf_on_enabled_change --on-variable fcnf_enabled
         echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n plugin_enabled)
     else
         echo (set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n plugin_invalid)
+    end
+end
+
+function __fcnf_on_batch_mode_change --on-variable fcnf_batch_mode
+    if not set -q fcnf_batch_mode; or test "$fcnf_batch_mode" = true
+        echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n batch_mode_on)
+    else if test "$fcnf_batch_mode" = false
+        echo (set_color --bold green)"✓"(set_color normal)" "(__fcnf_i18n batch_mode_off)
+    else
+        echo (set_color --bold yellow)"⚠"(set_color normal)" "(__fcnf_i18n batch_mode_invalid)
     end
 end
 
