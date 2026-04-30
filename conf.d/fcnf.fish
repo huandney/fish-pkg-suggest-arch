@@ -33,12 +33,6 @@ function __fcnf_preexec --on-event fish_preexec
         return
     end
 
-    # Batch mode opt-out: usuário prefere lidar com uma ausência por vez via
-    # fish_command_not_found (single mode). Sudo wrapper continua ativo.
-    if set -q fcnf_batch_mode; and test "$fcnf_batch_mode" = false
-        return
-    end
-
     command -q pkgfile; or return
     test -f /var/cache/pkgfile/.db_version; or return
 
@@ -88,6 +82,13 @@ function __fcnf_preexec --on-event fish_preexec
     # também se cale; o sudo nativo cuidará da própria mensagem.
     if test $sudo_disabled_present -eq 1
         test (count $local_miss) -gt 0; and set __fcnf_handled $local_miss
+        return
+    end
+
+    # Batch mode opt-out: 2+ ausentes numa linha → silencia tudo (sem
+    # "metralhadora" de prompts single). 1 ausente cai no fluxo single normal.
+    if set -q fcnf_batch_mode; and test "$fcnf_batch_mode" = false
+        test (count $local_miss) -ge 2; and set __fcnf_handled $local_miss
         return
     end
 

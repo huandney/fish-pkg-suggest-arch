@@ -75,7 +75,7 @@ set -U fcnf_pacman_noconfirm true
 set -U fcnf_pacman_noconfirm false
 
 # Batch mode for pipelines (default: enabled)
-set -U fcnf_batch_mode false   # only single-cmd reactive flow; preexec hook stays out of the way
+set -U fcnf_batch_mode false   # 1 missing = single prompt; 2+ missing = silent, native fish errors only
 set -U fcnf_batch_mode true
 
 # Sudo wrapper (default: enabled). See section below for the decision flow.
@@ -97,9 +97,12 @@ When `false`: `fish_command_not_found` mirrors the standard `pkgfile` suggestion
 
 ### Batch mode (`fcnf_batch_mode`)
 
-When `false`, the `fish_preexec` hook short-circuits and pipelines with multiple missing commands fall through to the regular single-command flow (one prompt per failure, in fish's default order). Useful if you prefer to handle one missing command at a time.
+When `false`:
 
-Caveat: the post-batch sudo-password suppression (which prevents a stray password prompt when you cancel a `sudo cmdA; cmdB` line) only runs from the batch flow. With batch off, that specific edge case is no longer handled — `sudo missing-cmd` alone still works normally via the sudo wrapper.
+- A line with **one** missing command still triggers the regular single-mode prompt.
+- A line with **two or more** missing commands is silenced entirely — no batch summary, no per-command prompts. You see only fish's native `command not found` errors. This avoids a "machine-gun" of prompts when you only wanted single mode.
+
+Caveat: the post-batch sudo-password suppression (which prevents a stray password prompt when you cancel a `sudo cmdA; cmdB` line) only runs when batch is on. `sudo missing-cmd` alone still works normally via the sudo wrapper.
 
 ### Sudo wrapper (`fcnf_sudo_wrapper`)
 
