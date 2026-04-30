@@ -58,12 +58,15 @@ If the cache is missing, the plugin tells you on the first failed command.
 All settings live in universal variables (persist across sessions). Use the `fcnf` command for scoped feedback:
 
 ```fish
-fcnf on | off | default       # master kill-switch
-fcnf layout <style> | default # compact (default), classic, minimal
-fcnf pacman auto | manual     # skip or show pacman prompt
-fcnf batch  on | off          # toggle batch mode for pipelines
-fcnf sudo   on | off          # toggle sudo wrapper
-fcnf preview                  # preview all layouts
+fcnf on | off | default         # Master toggle (default: on)
+fcnf layout <style> | default   # compact, classic, minimal (default: compact)
+fcnf pacman auto | manual       # skip pacman [Y/n] prompt (default: manual)
+fcnf batch  on | off            # batch mode for pipelines (default: on)
+fcnf sudo   on | off            # shadow sudo wrapper (default: on)
+
+fcnf status                     # show current configuration
+fcnf preview                    # preview all layouts side by side
+fcnf help                       # show usage
 ```
 
 > Direct `set -U fcnf_*` still works, but won't print the confirmation message. The `fcnf` command exists specifically to scope feedback to the originating session.
