@@ -58,73 +58,77 @@ If the cache is missing, the plugin tells you on the first failed command.
 All settings live in universal variables (persist across sessions, take effect immediately). Use the `fcnf` command to change them — it shows feedback only in the terminal where you ran it, instead of every open shell.
 
 ```fish
-fcnf set <var> <value>   # set a configuration variable
-fcnf unset <var>         # revert to default
-fcnf preview             # show all three layouts side by side
-fcnf help                # show usage
+fcnf on | off | default       # master kill-switch
+fcnf status                   # show current configuration
+fcnf preview                  # show all three layouts side by side
+fcnf help                     # show usage
+
+fcnf layout compact|classic|minimal|default
+fcnf pacman auto|manual|default
+fcnf batch  on|off|default
+fcnf sudo   on|off|default
 ```
 
-Available variables: `enabled`, `layout`, `pacman_noconfirm`, `batch_mode`, `sudo_wrapper`.
+`default` removes the underlying universal variable, reverting to the plugin's built-in default.
 
 ```fish
-# Master kill-switch (default: enabled)
-fcnf set enabled false      # plugin out of the way: native pkgfile suggestion + fish default
-fcnf set enabled true       # re-enable
-fcnf unset enabled          # remove the variable (= default = enabled)
+# Master kill-switch (default: on)
+fcnf off        # plugin out of the way: native pkgfile suggestion + fish default
+fcnf on         # re-enable
+fcnf default    # back to default (= on)
 
-# Layout (default: compact). Run `fcnf preview` to compare all three.
-fcnf set layout compact
-fcnf set layout classic
-fcnf set layout minimal
+# Layout (default: compact)
+fcnf layout classic
+fcnf layout default
 
-# Skip pacman's own "Continuar? [S/n]" prompt (default: off)
-fcnf set pacman_noconfirm true
-fcnf set pacman_noconfirm false
+# Pacman prompt (default: manual — pacman shows its own "Continue? [Y/n]")
+fcnf pacman auto      # skip pacman's confirmation prompt
+fcnf pacman manual
 
-# Batch mode for pipelines (default: enabled)
-fcnf set batch_mode false   # multi-command lines silenced (only fish's native errors)
-fcnf set batch_mode true
+# Batch mode for pipelines (default: on)
+fcnf batch off        # multi-command lines silenced (only fish's native errors)
+fcnf batch on
 
-# Sudo wrapper (default: enabled). See section below for the decision flow.
-fcnf set sudo_wrapper false # erase shadow sudo + ignore sudo in batch flow
-fcnf set sudo_wrapper true
+# Sudo wrapper (default: on). See section below for the decision flow.
+fcnf sudo off         # erase shadow sudo + ignore sudo in batch flow
+fcnf sudo on
 ```
 
-> Direct `set -U fcnf_*` still works (it's the underlying mechanism), but won't print the confirmation message and will *not* echo across other open terminals. The `fcnf` command exists specifically to scope feedback to the originating session.
+> Direct `set -U fcnf_*` still works (it's the underlying mechanism), but won't print the confirmation message. The `fcnf` command exists specifically to scope feedback to the originating session.
 
-### Master kill-switch (`fcnf_enabled`)
+### Master kill-switch
 
 Useful for debugging a script or isolating interference without uninstalling.
 
 ```fish
-fcnf set enabled false   # plugin out of the way
-fcnf set enabled true    # re-enable
-fcnf unset enabled       # same as true (default)
+fcnf off       # plugin out of the way
+fcnf on        # re-enable
+fcnf default   # same as on
 ```
 
-When `false`: `fish_command_not_found` mirrors the standard `pkgfile` suggestion (then falls back to fish's default), the preexec hook short-circuits, and the shadow `sudo` function is erased from memory. This flag takes precedence over `fcnf_sudo_wrapper`.
+When off: `fish_command_not_found` mirrors the standard `pkgfile` suggestion (then falls back to fish's default), the preexec hook short-circuits, and the shadow `sudo` function is erased from memory. The master switch takes precedence over `fcnf sudo`.
 
-### Batch mode (`fcnf_batch_mode`)
+### Batch mode
 
 Batch mode triggers on any line with **two or more real commands** (pipeline, `&&`, `||`, `;`, `&`), regardless of how many of them are missing. A line like `sudo nyancat | cmatrix` (only `nyancat` missing) shows the batch list because the single-mode prompt would be intrusive mid-pipeline.
 
-When `false`:
+When off (`fcnf batch off`):
 
 - A line with a single command still triggers the regular single-mode prompt.
 - A line with **two or more commands** is silenced entirely — no batch summary, no per-command prompts. You see only fish's native `command not found` errors. This avoids a "machine-gun" of prompts when you only wanted single mode.
 
 Caveat: the post-batch sudo-password suppression (which prevents a stray password prompt when you cancel a `sudo cmdA; cmdB` line) only runs when batch is on. `sudo missing-cmd` alone still works normally via the sudo wrapper.
 
-### Sudo wrapper (`fcnf_sudo_wrapper`)
+### Sudo wrapper
 
 By default, the plugin mounts a shadow `sudo` function that intercepts `sudo missing-cmd` and offers `[I]nstall / [R]un after / [C]ancel`. It also prevents a stray password prompt when the batch flow has just handled a missing command behind `sudo`.
 
 The wrapper is **dynamically mounted** at runtime by `conf.d/fcnf.fish`. The autoload file is named `__fcnf_sudo.fish`, so the name `sudo` is never claimed at the file level — it only exists in memory while enabled.
 
-| `fcnf_sudo_wrapper` | Effect |
+| State | Effect |
 |---|---|
-| unset (default) or `true` | Shadow `sudo` function is defined; batch flow descends into `sudo` prefixes. |
-| `false` | Shadow function is erased; batch flow ignores `sudo`. The `sudo` name is fully released — other plugins that wrap `sudo` work normally. |
+| `fcnf sudo on` (default) | Shadow `sudo` function is defined; batch flow descends into `sudo` prefixes. |
+| `fcnf sudo off` | Shadow function is erased; batch flow ignores `sudo`. The `sudo` name is fully released — other plugins that wrap `sudo` work normally. |
 
 Decision flow when the wrapper is on (top-down, fail-fast):
 
@@ -135,7 +139,7 @@ Decision flow when the wrapper is on (top-down, fail-fast):
 | No inner command, command already exists, no pkgfile cache, or no package match | Forwards to `command sudo`. |
 | TTY interactive prompt | Shows `[I]nstall / [R]un after / [C]ancel`. |
 
-**Compatibility with other `sudo`-wrapping plugins.** Fish allows only one function definition per name. If you use another plugin that wraps `sudo`, run `fcnf set sudo_wrapper false` — our function is removed from memory and the other plugin takes over cleanly.
+**Compatibility with other `sudo`-wrapping plugins.** Fish allows only one function definition per name. If you use another plugin that wraps `sudo`, run `fcnf sudo off` — our function is removed from memory and the other plugin takes over cleanly.
 
 ## Development
 

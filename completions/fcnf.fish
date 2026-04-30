@@ -11,48 +11,27 @@ function __fcnf_no_subcommand
     test (count $cmd) -le 1
 end
 
-function __fcnf_using_subcommand
+function __fcnf_feature_is
     set -l cmd (commandline -opc)
-    test (count $cmd) -ge 2; and test "$cmd[2]" = $argv[1]
-end
-
-function __fcnf_set_needs_var
-    set -l cmd (commandline -opc)
-    test (count $cmd) -eq 2; and test "$cmd[2]" = set
-end
-
-function __fcnf_set_needs_value
-    set -l cmd (commandline -opc)
-    test (count $cmd) -eq 3; and test "$cmd[2]" = set
-end
-
-function __fcnf_unset_needs_var
-    set -l cmd (commandline -opc)
-    test (count $cmd) -eq 2; and test "$cmd[2]" = unset
+    test (count $cmd) -eq 2; and test "$cmd[2]" = $argv[1]
 end
 
 complete -c fcnf -f
 
-complete -c fcnf -n __fcnf_no_subcommand -a set    -d 'Set a fcnf_* variable'
-complete -c fcnf -n __fcnf_no_subcommand -a unset  -d 'Remove a fcnf_* variable'
+# Top-level commands
+complete -c fcnf -n __fcnf_no_subcommand -a on      -d 'Enable plugin'
+complete -c fcnf -n __fcnf_no_subcommand -a off     -d 'Disable plugin (kill-switch)'
+complete -c fcnf -n __fcnf_no_subcommand -a default -d 'Reset master switch to default'
+complete -c fcnf -n __fcnf_no_subcommand -a status  -d 'Show current configuration'
 complete -c fcnf -n __fcnf_no_subcommand -a preview -d 'Show all three layouts'
-complete -c fcnf -n __fcnf_no_subcommand -a help   -d 'Show help'
+complete -c fcnf -n __fcnf_no_subcommand -a help    -d 'Show help'
+complete -c fcnf -n __fcnf_no_subcommand -a layout  -d 'Output layout'
+complete -c fcnf -n __fcnf_no_subcommand -a pacman  -d 'Pacman noconfirm flag'
+complete -c fcnf -n __fcnf_no_subcommand -a batch   -d 'Batch mode for pipelines'
+complete -c fcnf -n __fcnf_no_subcommand -a sudo    -d 'Shadow sudo wrapper'
 
-set -l fcnf_vars 'enabled\t"Master kill-switch" layout\t"Output layout" pacman_noconfirm\t"Skip pacman prompt" batch_mode\t"Batch mode for pipelines" sudo_wrapper\t"Shadow sudo wrapper"'
-
-complete -c fcnf -n __fcnf_set_needs_var   -xa "$fcnf_vars"
-complete -c fcnf -n __fcnf_unset_needs_var -xa "$fcnf_vars"
-
-# Value completion for `fcnf set <var> <TAB>`
-function __fcnf_set_value_for
-    set -l cmd (commandline -opc)
-    test (count $cmd) -ne 3; and return 1
-    test "$cmd[2]" != set; and return 1
-    test "$cmd[3]" = $argv[1]
-end
-
-complete -c fcnf -n '__fcnf_set_value_for layout'           -xa 'compact classic minimal'
-complete -c fcnf -n '__fcnf_set_value_for enabled'          -xa 'true false'
-complete -c fcnf -n '__fcnf_set_value_for pacman_noconfirm' -xa 'true false'
-complete -c fcnf -n '__fcnf_set_value_for batch_mode'       -xa 'true false'
-complete -c fcnf -n '__fcnf_set_value_for sudo_wrapper'     -xa 'true false'
+# Per-feature values
+complete -c fcnf -n '__fcnf_feature_is layout' -xa 'compact classic minimal default'
+complete -c fcnf -n '__fcnf_feature_is pacman' -xa 'auto manual default'
+complete -c fcnf -n '__fcnf_feature_is batch'  -xa 'on off default'
+complete -c fcnf -n '__fcnf_feature_is sudo'   -xa 'on off default'
