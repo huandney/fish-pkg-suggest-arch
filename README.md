@@ -55,46 +55,18 @@ If the cache is missing, the plugin tells you on the first failed command.
 
 ## Configuration
 
-All settings live in universal variables (persist across sessions, take effect immediately). Use the `fcnf` command to change them — it shows feedback only in the terminal where you ran it, instead of every open shell.
+All settings live in universal variables (persist across sessions). Use the `fcnf` command for scoped feedback:
 
 ```fish
 fcnf on | off | default       # master kill-switch
-fcnf status                   # show current configuration
-fcnf preview                  # show all three layouts side by side
-fcnf help                     # show usage
-
-fcnf layout compact|classic|minimal|default
-fcnf pacman auto|manual|default
-fcnf batch  on|off|default
-fcnf sudo   on|off|default
+fcnf layout <style> | default # compact (default), classic, minimal
+fcnf pacman auto | manual     # skip or show pacman prompt
+fcnf batch  on | off          # toggle batch mode for pipelines
+fcnf sudo   on | off          # toggle sudo wrapper
+fcnf preview                  # preview all layouts
 ```
 
-`default` removes the underlying universal variable, reverting to the plugin's built-in default.
-
-```fish
-# Master kill-switch (default: on)
-fcnf off        # plugin out of the way: native pkgfile suggestion + fish default
-fcnf on         # re-enable
-fcnf default    # back to default (= on)
-
-# Layout (default: compact)
-fcnf layout classic
-fcnf layout default
-
-# Pacman prompt (default: manual — pacman shows its own "Continue? [Y/n]")
-fcnf pacman auto      # skip pacman's confirmation prompt
-fcnf pacman manual
-
-# Batch mode for pipelines (default: on)
-fcnf batch off        # multi-command lines silenced (only fish's native errors)
-fcnf batch on
-
-# Sudo wrapper (default: on). See section below for the decision flow.
-fcnf sudo off         # erase shadow sudo + ignore sudo in batch flow
-fcnf sudo on
-```
-
-> Direct `set -U fcnf_*` still works (it's the underlying mechanism), but won't print the confirmation message. The `fcnf` command exists specifically to scope feedback to the originating session.
+> Direct `set -U fcnf_*` still works, but won't print the confirmation message. The `fcnf` command exists specifically to scope feedback to the originating session.
 
 **Note:** The `fcnf off/on/default` commands act as a master toggle. When disabled, the plugin bypasses all its logic (including command-not-found prompts, batch mode, and the sudo wrapper) and reverts to standard shell behavior, overriding all other individual settings.
 
