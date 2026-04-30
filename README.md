@@ -9,24 +9,15 @@ A `command_not_found` handler for [Fish shell](https://fishshell.com) on Arch Li
 Standard reactive flow: the shell fails, the plugin prints the package details and asks. Zero overhead on a normal command.
 
 <!-- single-demo.gif -->
-![Single mode](https://github.com/user-attachments/assets/4fd10fe2-dd56-41f4-8b71-c625d1d47ded)
+![Single mode](https://github.com/user-attachments/assets/1d5a9df5-35d1-4c02-b03e-9cd57f1f26bb)
 
 ### Batch mode — pipeline with two or more missing commands
 
 A `fish_preexec` hook runs *before* the line executes, splits on `|`, `&&`, `||`, `;`, `&`, identifies which positions are real commands the system can't resolve, and presents a single unified prompt. Pick all, a subset, or cancel — no need to retype the line afterwards.
 
 <!-- batch-demo.gif -->
+![Single mode](https://github.com/user-attachments/assets/73fec785-abf5-48f6-9898-7a6e93266bd1)
 
-```
-:: 2 pacotes ausentes para executar esta linha:
-
-    1  nyancat  →  cachyos-extra-v3/nyancat  v1.5.2-3.1    42KB
-       └─ Terminal-based nyancat animation
-    2  cmatrix  →  cachyos-extra-v3/cmatrix  v2.0-4.1      95KB
-       └─ Matrix screen saver
-
-:: Pacotes a instalar ([T]odos, ex: 1 2 ou 1-3, [C]ancelar):
-```
 
 Both modes also work behind `sudo` (e.g. `sudo missing-cmd` or `sudo cmdA; cmdB`). Language auto-detects from the system locale (Portuguese / English).
 
