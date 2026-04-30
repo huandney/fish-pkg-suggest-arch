@@ -15,10 +15,8 @@ particular Fish/parser behavior.
 | `test_flow.fish` | Full preexec invocation with mocked cmdline |
 | `test_flow2.fish` | Phase 2 only, standalone |
 | `test_stty.fish` | Demonstrates the raw-mode terminal issue inside `fish_preexec` |
-| `test_stty.py` | Pexpect probe of stty state during a preexec event |
-| `test_interactive.py` | End-to-end pexpect test of the batch UI prompt |
+| `test_parse_amp.fish` | Split-on-`&` probe (background ops): proves `nyancat & cmatrix & tree` segments correctly |
+| `test_fg_bg.fish` | Foreground/background detection inside a function via `pgrp` vs `tpgid` |
+| `test_bg_handler_read.fish` | Probe whether `read` inside `fish_command_not_found` works when invoked from a background job |
 
-`test_interactive.py` requires `pip install pexpect`.
-
-Run from the repo root, e.g. `fish tests/test_flow.fish` or
-`python tests/test_interactive.py`.
+Run from the repo root, e.g. `fish tests/test_flow.fish`.
