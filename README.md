@@ -96,17 +96,7 @@ fcnf sudo on
 
 > Direct `set -U fcnf_*` still works (it's the underlying mechanism), but won't print the confirmation message. The `fcnf` command exists specifically to scope feedback to the originating session.
 
-### Master kill-switch
-
-Useful for debugging a script or isolating interference without uninstalling.
-
-```fish
-fcnf off       # plugin out of the way
-fcnf on        # re-enable
-fcnf default   # same as on
-```
-
-When off: `fish_command_not_found` mirrors the standard `pkgfile` suggestion (then falls back to fish's default), the preexec hook short-circuits, and the shadow `sudo` function is erased from memory. The master switch takes precedence over `fcnf sudo`.
+**Note:** The `fcnf off/on/default` commands act as a master toggle. When disabled, the plugin bypasses all its logic (including command-not-found prompts, batch mode, and the sudo wrapper) and reverts to standard shell behavior, overriding all other individual settings.
 
 ### Batch mode
 
