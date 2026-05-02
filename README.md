@@ -55,65 +55,47 @@ If the cache is missing, the plugin tells you on the first failed command.
 
 ## Configuration
 
-All options are universal variables. Changes take effect immediately, no reload needed.
-
-All options are universal variables, so they persist across sessions. Each block below lists the available values — copy the line you want.
+All settings live in universal variables (persist across sessions). Use the `fcnf` command for scoped feedback:
 
 ```fish
-# Master kill-switch.
-set -U fcnf_enabled false   # plugin out of the way: native pkgfile suggestion + fish default
-set -U fcnf_enabled true    # re-enable
-set -e fcnf_enabled         # remove the variable (= default = enabled)
+fcnf on | off | default         # Master toggle (default: on)
+fcnf layout <style> | default   # compact, classic, minimal (default: compact)
+fcnf pacman auto | manual       # skip pacman [Y/n] prompt (default: manual)
+fcnf batch  on | off            # batch mode for pipelines (default: on)
+fcnf sudo   on | off            # shadow sudo wrapper (default: on)
 
-# Layout (default: compact). Run `fcnf-preview` to compare all three.
-set -U fcnf_layout compact
-set -U fcnf_layout classic
-set -U fcnf_layout minimal
-
-# Skip pacman's own "Continue? [Y/n]" prompt (default: off)
-set -U fcnf_pacman_noconfirm true
-set -U fcnf_pacman_noconfirm false
-
-# Batch mode for pipelines (default: enabled)
-set -U fcnf_batch_mode false   # 1 missing = single prompt; 2+ missing = silent, native fish errors only
-set -U fcnf_batch_mode true
-
-# Sudo wrapper (default: enabled). See section below for the decision flow.
-set -U fcnf_sudo_wrapper false   # erase shadow sudo + ignore sudo in batch flow
-set -U fcnf_sudo_wrapper true
+fcnf status                     # show current configuration
+fcnf preview                    # preview all layouts side by side
+fcnf help                       # show usage
 ```
 
-### Master kill-switch (`fcnf_enabled`)
+Fish completions are provided for `fcnf`, including localized descriptions for commands and values.
 
-Useful for debugging a script or isolating interference without uninstalling.
+> Direct `set -U fcnf_*` still works, but won't print the confirmation message. The `fcnf` command exists specifically to scope feedback to the originating session.
 
-```fish
-set -U fcnf_enabled false   # plugin out of the way
-set -U fcnf_enabled true    # re-enable
-set -e fcnf_enabled         # same as true (default)
-```
+**Note:** The `fcnf off/on/default` commands act as a master toggle. When disabled, the plugin bypasses all its logic (including command-not-found prompts, batch mode, and the sudo wrapper) and reverts to standard shell behavior, overriding all other individual settings.
 
-When `false`: `fish_command_not_found` mirrors the standard `pkgfile` suggestion (then falls back to fish's default), the preexec hook short-circuits, and the shadow `sudo` function is erased from memory. This flag takes precedence over `fcnf_sudo_wrapper`.
+### Batch mode
 
-### Batch mode (`fcnf_batch_mode`)
+Batch mode triggers on any line with **two or more real commands** (pipeline, `&&`, `||`, `;`, `&`), regardless of how many of them are missing. A line like `sudo nyancat | cmatrix` (only `nyancat` missing) shows the batch list because the single-mode prompt would be intrusive mid-pipeline.
 
-When `false`:
+When off (`fcnf batch off`):
 
-- A line with **one** missing command still triggers the regular single-mode prompt.
-- A line with **two or more** missing commands is silenced entirely — no batch summary, no per-command prompts. You see only fish's native `command not found` errors. This avoids a "machine-gun" of prompts when you only wanted single mode.
+- A line with a single command still triggers the regular single-mode prompt.
+- A line with **two or more commands** is silenced entirely — no batch summary, no per-command prompts. You see only fish's native `command not found` errors. This avoids a "machine-gun" of prompts when you only wanted single mode.
 
 Caveat: the post-batch sudo-password suppression (which prevents a stray password prompt when you cancel a `sudo cmdA; cmdB` line) only runs when batch is on. `sudo missing-cmd` alone still works normally via the sudo wrapper.
 
-### Sudo wrapper (`fcnf_sudo_wrapper`)
+### Sudo wrapper
 
 By default, the plugin mounts a shadow `sudo` function that intercepts `sudo missing-cmd` and offers `[I]nstall / [R]un after / [C]ancel`. It also prevents a stray password prompt when the batch flow has just handled a missing command behind `sudo`.
 
 The wrapper is **dynamically mounted** at runtime by `conf.d/fcnf.fish`. The autoload file is named `__fcnf_sudo.fish`, so the name `sudo` is never claimed at the file level — it only exists in memory while enabled.
 
-| `fcnf_sudo_wrapper` | Effect |
+| State | Effect |
 |---|---|
-| unset (default) or `true` | Shadow `sudo` function is defined; batch flow descends into `sudo` prefixes. |
-| `false` | Shadow function is erased; batch flow ignores `sudo`. The `sudo` name is fully released — other plugins that wrap `sudo` work normally. |
+| `fcnf sudo on` (default) | Shadow `sudo` function is defined; batch flow descends into `sudo` prefixes. |
+| `fcnf sudo off` | Shadow function is erased; batch flow ignores `sudo`. The `sudo` name is fully released — other plugins that wrap `sudo` work normally. |
 
 Decision flow when the wrapper is on (top-down, fail-fast):
 
@@ -124,7 +106,7 @@ Decision flow when the wrapper is on (top-down, fail-fast):
 | No inner command, command already exists, no pkgfile cache, or no package match | Forwards to `command sudo`. |
 | TTY interactive prompt | Shows `[I]nstall / [R]un after / [C]ancel`. |
 
-**Compatibility with other `sudo`-wrapping plugins.** Fish allows only one function definition per name. If you use another plugin that wraps `sudo`, set `fcnf_sudo_wrapper false` — our function is removed from memory and the other plugin takes over cleanly.
+**Compatibility with other `sudo`-wrapping plugins.** Fish allows only one function definition per name. If you use another plugin that wraps `sudo`, run `fcnf sudo off` — our function is removed from memory and the other plugin takes over cleanly.
 
 ## Development
 

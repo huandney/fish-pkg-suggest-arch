@@ -67,16 +67,16 @@ function __fcnf_i18n --argument-names key sub1
         case 'en:prompt_minimal'; echo "[I]nstall / [R]un / [C]ancel: "
 
         # batch flow — happy path (__fcnf_preexec)
-        case 'pt:batch_summary'; echo "$sub1 pacotes ausentes para executar esta linha:"
-        case 'en:batch_summary'; echo "$sub1 packages missing to run this line:"
+        case 'pt:batch_summary'; echo "$sub1 "(test $sub1 -eq 1; and echo "pacote ausente"; or echo "pacotes ausentes")" para executar esta linha:"
+        case 'en:batch_summary'; echo "$sub1 "(test $sub1 -eq 1; and echo "package"; or echo "packages")" missing to run this line:"
         case 'pt:batch_prompt';  echo "Pacotes a instalar ([T]odos, ex: 1 2 ou 1-3, [C]ancelar): "
         case 'en:batch_prompt';  echo "Packages to install ([A]ll, e.g. 1 2 or 1-3, [C]ancel): "
 
         # batch flow — warning path
         case 'pt:batch_warn_cmds';   echo "Comando(s) não encontrado(s) em nenhum repositório:"
         case 'en:batch_warn_cmds';   echo "Command(s) not found in any repository:"
-        case 'pt:batch_available';   echo "$sub1 pacotes disponíveis para instalação:"
-        case 'en:batch_available';   echo "$sub1 packages available to install:"
+        case 'pt:batch_available';   echo "$sub1 "(test $sub1 -eq 1; and echo "pacote disponível"; or echo "pacotes disponíveis")" para instalação:"
+        case 'en:batch_available';   echo "$sub1 "(test $sub1 -eq 1; and echo "package available"; or echo "packages available")" to install:"
         case 'pt:batch_warn_fail';   echo "A linha falhará mesmo após a instalação."
         case 'en:batch_warn_fail';   echo "The line will still fail after installation."
         case 'pt:batch_prompt_warn'; echo "Pacotes a instalar ([C]ancelar, ex: 1 2 ou 1-3, [T]odos): "

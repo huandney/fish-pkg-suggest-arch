@@ -37,8 +37,12 @@ package() {
     "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_install.fish"
   install -Dm644 functions/__fcnf_sudo.fish \
     "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_sudo.fish"
-  install -Dm644 functions/fcnf-preview.fish \
-    "$pkgdir/usr/share/fish/vendor_functions.d/fcnf-preview.fish"
+  install -Dm644 functions/__fcnf_sudo_inner_cmd.fish \
+    "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_sudo_inner_cmd.fish"
+  install -Dm644 functions/__fcnf_bg_tokens.fish \
+    "$pkgdir/usr/share/fish/vendor_functions.d/__fcnf_bg_tokens.fish"
+  install -Dm644 functions/fcnf.fish \
+    "$pkgdir/usr/share/fish/vendor_functions.d/fcnf.fish"
   install -Dm644 completions/fcnf.fish \
     "$pkgdir/usr/share/fish/vendor_completions.d/fcnf.fish"
   install -Dm644 conf.d/fcnf.fish \
