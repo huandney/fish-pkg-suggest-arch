@@ -69,6 +69,8 @@ fcnf preview                    # preview all layouts side by side
 fcnf help                       # show usage
 ```
 
+Fish completions are provided for `fcnf`, including localized descriptions for commands and values.
+
 > Direct `set -U fcnf_*` still works, but won't print the confirmation message. The `fcnf` command exists specifically to scope feedback to the originating session.
 
 **Note:** The `fcnf off/on/default` commands act as a master toggle. When disabled, the plugin bypasses all its logic (including command-not-found prompts, batch mode, and the sudo wrapper) and reverts to standard shell behavior, overriding all other individual settings.
